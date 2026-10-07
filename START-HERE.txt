@@ -1,3 +1,6 @@
+Browser app / Browserapp:
+https://zeffuro.github.io/crossban-review/
+
 Crossban Review - Windows
 
 1. Right-click the ZIP and choose Extract all.

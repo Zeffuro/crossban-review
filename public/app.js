@@ -26,6 +26,7 @@ function notice(message, error = false) {
 }
 
 async function request(path, body, method = 'POST') {
+    if (window.crossbanRuntime) return window.crossbanRuntime.request(path, body, body === undefined ? 'GET' : method);
     const response = await fetch(path, {
         method: body === undefined ? 'GET' : method,
         headers: body === undefined ? {} : { 'Content-Type': 'application/json', 'X-CSRF-Token': state?.csrf || '' },
@@ -60,11 +61,12 @@ async function perform(action, success) {
 
 async function applyState(next) {
     state = next;
-    if (next.importSummary) importSummary = next.importSummary;
+    importSummary = next.importSummary || null;
     const valid = new Set(next.reports.filter(canSelect).map((report) => report.id));
     selected = new Set([...selected].filter((id) => valid.has(id)));
     if (!next.reports.some((report) => report.id === activeId)) activeId = next.reports[0]?.id || null;
     $('setup').hidden = next.configured;
+    if (typeof renderBrowserMode === 'function') renderBrowserMode(next);
     $('connection').textContent = next.auth ? t('Connected as {login}', { login: next.auth.login }) : t('Twitch disconnected');
     $('connect').hidden = !!next.auth;
     $('disconnect').hidden = !next.auth;
@@ -116,13 +118,14 @@ function canSelect(report) {
 }
 
 function updateControls() {
-    const locked = pending || loadingChannels || !!state?.busy;
+    const locked = pending || loadingChannels || !!state?.busy || !!state?.readOnly;
     for (const id of ['import', 'importExport', 'demo', 'connect', 'disconnect', 'resolve']) $(id).disabled = locked || !state || (id === 'connect' && !state?.configured);
     $('resolve').disabled ||= !state?.auth || !state.reports.length;
     $('channel').disabled = locked || !state?.auth;
     $('prepare').disabled = locked || !selected.size || !$('channel').value;
     $('prepare').classList.toggle('spinning', locked);
-    $('selectedCount').textContent = t('{count} selected', { count: selected.size }) + (state?.busy ? t(' · Action in progress') : '');
+    $('selectedCount').textContent = t('{count} selected', { count: selected.size }) + (state?.busy && !state?.readOnly ? t(' · Action in progress') : '');
+    if (state && typeof renderBrowserMode === 'function') renderBrowserMode(state);
     document.querySelectorAll('[data-mutation]').forEach((node) => { node.disabled = locked || node.dataset.blocked === 'true'; });
     document.querySelectorAll('.report input').forEach((node) => {
         node.disabled = locked || !canSelect(state.reports.find((report) => report.id === node.dataset.id));
@@ -244,11 +247,13 @@ function renderDetail() {
     for (const [index, path] of report.evidence.entries()) {
         if (typeof path !== 'string' || !/^\/evidence\/[a-f0-9]{32}\.(png|jpg|webp)$/.test(path)) continue;
         const link = element('a');
-        link.href = path;
+        const evidenceUrl = state.environment === 'browser' ? state.evidenceUrls?.[path] : path;
+        if (!evidenceUrl) continue;
+        link.href = evidenceUrl;
         link.target = '_blank';
         link.rel = 'noopener';
         const image = element('img');
-        image.src = path;
+        image.src = evidenceUrl;
         image.alt = t('Attached evidence {index} for {login}', { index: index + 1, login: report.login });
         image.loading = 'lazy';
         link.append(image);
@@ -450,6 +455,7 @@ $('confirmForm').addEventListener('submit', async (event) => {
         try {
             const result = await request('/api/execute', { planId: action.plan.planId, confirmation: action.plan.channelLogin });
             selected.clear();
+            notice(t('Batch processing ended. Check action history for every result.'));
             return result;
         } finally { clearInterval(poll); }
     });
@@ -466,7 +472,10 @@ $('import').addEventListener('click', () => {
     if (!$('importText').value.trim()) { notice(t('Paste report text or Twitch usernames first.'), true); return; }
     perform(() => request('/api/import', { text: $('importText').value }), t('Reports imported. Check the parsing hints and exact Twitch accounts.'));
 });
-$('importExport').addEventListener('click', () => perform(() => request('/api/import/export', {}), t('Export folder import complete. Review the coverage summary and any import issues.')));
+$('importExport').addEventListener('click', () => {
+    if (window.crossbanRuntime) $('exportFolder').click();
+    else perform(() => request('/api/import/export', {}), t('Export folder import complete. Review the coverage summary and any import issues.'));
+});
 $('textFile').addEventListener('change', async () => {
     const file = $('textFile').files[0];
     if (!file) return;
@@ -499,6 +508,7 @@ $('refresh').addEventListener('click', async () => {
 document.addEventListener('ui-language-change', () => {
     $('notice').textContent = translateError($('notice').textContent);
     if (state) {
+        renderBrowserMode(state);
         const detailInputs = [...$('detail').querySelectorAll('input')].filter(node => node.type !== 'file').map(node => node.value);
         renderChannels(); renderQueue(); renderDetail(); renderHistory(); renderImportSummary(); updateControls();
         [...$('detail').querySelectorAll('input')].filter(node => node.type !== 'file').forEach((node, index) => { node.value = detailInputs[index] ?? node.value; });

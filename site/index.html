@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Review community reports and evidence, then explicitly select Twitch accounts for moderation. Use Crossban Review in your browser or download it for Windows.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Crossban Review · Twitch moderation with human review</title>
+    <link rel="stylesheet" href="./landing.css">
+    <script src="./i18n.js" defer></script>
+    <script src="./landing.js" defer></script>
+</head>
+<body>
+    <header><a class="brand" href="./">Crossban <span>Review</span></a><label><span class="sr-only">Language / Taal</span><select id="language" aria-label="Language / Taal"><option value="en">English</option><option value="nl">Nederlands</option></select></label></header>
+    <main>
+        <div class="intro"><p class="eyebrow" data-i18n="TWITCH MODERATION · HUMAN REVIEW">TWITCH MODERATION · HUMAN REVIEW</p><h1 data-i18n="Review the evidence. Choose the accounts.">Review the evidence.<br>Choose the accounts.</h1><p class="lead" data-i18n="Turn community reports into a review queue. Check screenshots, look up exact Twitch accounts and confirm the channel before sending any bans.">Turn community reports into a review queue. Check screenshots, look up exact Twitch accounts and confirm the channel before sending any bans.</p></div>
+        <section class="choices" aria-label="Choose how to use Crossban Review">
+            <article class="choice browser"><div class="choice-top"><span class="symbol">↗</span><span class="tag" data-i18n="No installation">No installation</span></div><h2 data-i18n="Use in your browser">Use in your browser</h2><p data-i18n="Open the app and connect your own Twitch account. Reports and screenshots stay in this browser; download backups to keep a copy.">Open the app and connect your own Twitch account. Reports and screenshots stay in this browser; download backups to keep a copy.</p><a id="browserLink" class="button primary" href="./app/" data-i18n="Open browser app">Open browser app</a><small data-i18n="A current desktop browser · Sign in each time">A current desktop browser · Sign in each time</small></article>
+            <article class="choice"><div class="choice-top"><span class="symbol">↓</span><span class="tag" data-i18n="Local files">Local files</span></div><h2 data-i18n="Download for Windows">Download for Windows</h2><p data-i18n="Extract the release ZIP and double-click Start.cmd. Choose your language; the launcher helps set up Node.js and pnpm, then opens your workspace.">Extract the release ZIP and double-click Start.cmd. Choose your language; the launcher helps set up Node.js and pnpm, then opens your workspace.</p><a class="button" href="https://github.com/Zeffuro/crossban-review/releases/latest/download/crossban-review-windows.zip" data-i18n="Download Windows ZIP">Download Windows ZIP</a><small data-i18n="Windows 10 / 11 · Reports saved in your data folder">Windows 10 / 11 · Reports saved in your data folder</small></article>
+        </section>
+        <section class="workflow"><h2 data-i18n="From report to reviewed action">From report to reviewed action</h2><ol><li><span>01</span><div><h3 data-i18n="Bring your reports">Bring your reports</h3><p data-i18n="Paste report text or usernames and attach screenshots. DiscordChatExporter JSON imports are available under Advanced.">Paste report text or usernames and attach screenshots. DiscordChatExporter JSON imports are available under Advanced.</p></div></li><li><span>02</span><div><h3 data-i18n="Check each identity">Check each identity</h3><p data-i18n="Open each report, compare its evidence and resolve the exact account. Approve and select only the users you intend to ban.">Open each report, compare its evidence and resolve the exact account. Approve and select only the users you intend to ban.</p></div></li><li><span>03</span><div><h3 data-i18n="Confirm your channel">Confirm your channel</h3><p data-i18n="Review the prepared list and type the channel and count. Action history records results and lets you check uncertain outcomes or undo recorded bans.">Review the prepared list and type the channel and count. Action history records results and lets you check uncertain outcomes or undo recorded bans.</p></div></li></ol></section>
+        <aside><strong data-i18n="Your Twitch account. Your review.">Your Twitch account. Your review.</strong><p data-i18n="Both versions connect directly to Twitch with your permission. No shared report database, Discord account access or automatic AI verdicts. You need moderation permission in the target channel.">Both versions connect directly to Twitch with your permission. No shared report database, Discord account access or automatic AI verdicts. You need moderation permission in the target channel.</p></aside>
+    </main>
+    <footer><span>Crossban Review · MIT</span><nav><a href="https://github.com/Zeffuro/crossban-review" data-i18n="Source & instructions">Source & instructions</a><a href="https://github.com/Zeffuro/crossban-review/releases" data-i18n="All releases">All releases</a></nav></footer>
+</body>
+</html>

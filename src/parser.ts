@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID, sha256Hex } from './platform.js';
 import type { Report } from './types.js';
 
 export function validLogin(value: string): boolean {
@@ -10,10 +10,10 @@ export function containsReportFields(text: string): boolean {
 }
 
 export function reportKey(report: Pick<Report, 'originalLogin' | 'reason' | 'streamer' | 'raw'>): string {
-    return createHash('sha256').update(JSON.stringify([
+    return sha256Hex(JSON.stringify([
         report.originalLogin.toLowerCase(), report.reason.trim(), report.streamer.trim(),
         report.originalLogin ? '' : report.raw.trim(),
-    ])).digest('hex');
+    ]));
 }
 
 function makeReport(name: string, reason: string, streamer: string, raw: string): Report {

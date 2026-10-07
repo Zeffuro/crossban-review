@@ -1,0 +1,38 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global pnpm@11
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build:pages
+      - name: Check release version
+        shell: pwsh
+        run: |
+          $package = Get-Content ./package.json -Raw | ConvertFrom-Json
+          if ($env:GITHUB_REF_NAME -ne ('v' + $package.version)) { throw 'Release tag must match package.json version.' }
+      - name: Package public files
+        shell: powershell
+        run: |
+          & ./scripts/Package-Source.ps1
+          $archive = Get-ChildItem -LiteralPath ./release -Filter 'crossban-review-*.zip' | Select-Object -First 1
+          Copy-Item -LiteralPath $archive.FullName -Destination ./release/crossban-review-windows.zip
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME ./release/crossban-review-windows.zip --title "Crossban Review $env:GITHUB_REF_NAME" --notes-file ./RELEASE-NOTES.md --verify-tag

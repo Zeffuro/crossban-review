@@ -1,13 +1,46 @@
 # Crossban Review
 
-A local Twitch moderation workspace: import reports, inspect screenshots, verify
+A Twitch moderation workspace for your browser or computer: import reports, inspect screenshots, verify
 exact accounts, and explicitly choose which users to ban in a channel you moderate.
 English and Dutch interface. Reports are information for human review, not an
 automatic ban list.
 
 [Nederlandse handleiding](README.nl.md)
 
+## Choose your version
+
+Open [Crossban Review](https://zeffuro.github.io/crossban-review/) to choose the
+**browser app** or **Windows ZIP**. Both use the same account lookup, human review,
+explicit batch confirmation and interrupted-action safeguards.
+
+### Browser app
+
+1. Open the browser app in a current desktop browser, choose English or Dutch
+   and click **Connect Twitch**. No installation or application registration.
+2. Paste reports or exact usernames, then attach screenshots to each report.
+3. Look up the accounts, review each report and **Approve & select** only the
+   intended accounts. Choose a channel you moderate and review the prepared bans.
+4. Use **Download backup** to keep a private copy of reports, screenshots and
+   history. **Restore backup** replaces reports and screenshots, preserves existing
+   action history and requires a new lookup and review. Restored actions require
+   checking Twitch before they can be treated as completed.
+
+Reports and screenshots are stored in IndexedDB in this browser profile. Clearing
+site data, using private browsing or switching profiles can remove them. Nothing
+is uploaded to a shared report server. Twitch login tokens remain in page memory;
+closing or refreshing the page requires signing in again. Only one tab can edit
+this workspace at a time. A current browser with Web Locks and IndexedDB is required.
+
+Optional advanced import: export DiscordChatExporter **JSON** with **Download
+assets** enabled, then choose the entire export folder in the app. Expired URLs
+or browser download restrictions appear in the coverage summary; downloaded
+assets avoid that dependency. The app does not access your Discord account.
+
 ## Quick start
+
+
+Browser workspaces accept up to 10,000 reports, 100,000 actions, 32 MB of report data
+and 128 MB of screenshots. Oversized imports are rolled back without sending bans.
 
 ### Windows download
 
@@ -56,7 +89,8 @@ You can import reports and screenshots before configuring or connecting Twitch.
 **No manual token generation or pasting.** Select **Connect Twitch**, open the
 Twitch activation link, sign in with your **personal Twitch account**, and approve
 the requested permissions. Keep this app open while authorizing in the other tab.
-The app obtains and stores tokens automatically. You can only act in your own
+The app obtains tokens automatically. The local version encrypts them on disk;
+the browser version keeps them only until the page closes or reloads. You can only act in your own
 channel or channels where that Twitch account is a moderator.
 
 The **client ID identifies the application**; the **user token identifies the

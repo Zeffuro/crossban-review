@@ -1,13 +1,47 @@
 # Crossban Review
 
-Een lokale werkplek voor Twitch-moderatie: importeer meldingen, bekijk screenshots,
+Een werkplek voor Twitch-moderatie in je browser of op je computer: importeer meldingen, bekijk screenshots,
 controleer de exacte accounts en selecteer zelf wie je wilt bannen in een kanaal
 waar je moderator bent. De interface is beschikbaar in het Nederlands en Engels.
 Een melding is informatie om te beoordelen, geen automatische banopdracht.
 
 [English guide](README.md)
 
+## Kies je versie
+
+Open [Crossban Review](https://zeffuro.github.io/crossban-review/) en kies de
+**browserapp** of **Windows-ZIP**. Beide gebruiken dezelfde accountcontrole,
+menselijke beoordeling, expliciete batchbevestiging en beveiliging bij onderbroken acties.
+
+### Browserapp
+
+1. Open de browserapp in een recente desktopbrowser, kies Nederlands of Engels
+   en klik **Twitch verbinden**. Je hoeft niets te installeren of registreren.
+2. Plak meldingen of exacte gebruikersnamen en voeg screenshots per melding toe.
+3. Zoek de accounts op, beoordeel elke melding en kies **Goedkeuren en selecteren**
+   voor de bedoelde accounts. Kies een kanaal waar je moderator bent en controleer de bans.
+4. Kies **Back-up downloaden** voor een privékopie van meldingen, screenshots en
+   geschiedenis. **Back-up herstellen** vervangt meldingen en screenshots, behoudt
+   bestaande actiegeschiedenis en vereist opnieuw opzoeken en beoordelen. Controleer
+   herstelde acties op Twitch voordat je ze als voltooid registreert.
+
+Meldingen en screenshots worden met IndexedDB in dit browserprofiel opgeslagen.
+Sitegegevens wissen, privémodus of een ander profiel kan ze verwijderen. Ze worden
+niet naar een gedeelde server geüpload. Twitch-tokens blijven alleen in het geheugen
+van de pagina; na sluiten of vernieuwen log je opnieuw in. Eén tabblad tegelijk kan
+wijzigingen maken. Gebruik een recente browser met Web Locks en IndexedDB.
+
+Optioneel geavanceerd importeren: exporteer DiscordChatExporter **JSON** met
+**Download assets** ingeschakeld en kies in de app de volledige exportmap.
+Verlopen links of browserbeperkingen verschijnen in het importoverzicht;
+gedownloade bijlagen voorkomen deze afhankelijkheid. De app benadert je Discord-account niet.
+
 ## Installeren
+
+
+Browserwerkplekken ondersteunen maximaal 10.000 meldingen, 100.000 acties, 32 MB
+aan meldingsgegevens en 128 MB aan screenshots. Te grote imports worden teruggedraaid
+zonder bans te versturen.
 
 ### Windows-download
 
@@ -57,7 +91,8 @@ Kies **Nederlands** bovenaan; de app onthoudt je taalkeuze op deze computer.
 **Je hoeft geen token aan te maken of te plakken.** Klik op **Twitch verbinden**,
 open de inloglink, log in met je **persoonlijke Twitch-account** en geef de app
 toestemming. Houd het beoordelingsscherm open terwijl je in het andere tabblad
-inlogt. De app ontvangt en bewaart de tokens zelf.
+inlogt. De app ontvangt de tokens zelf. De lokale versie bewaart ze versleuteld; de
+browserapp houdt ze alleen in het geheugen tot je de pagina sluit of vernieuwt.
 Je kunt alleen handelen in je eigen kanaal of waar jouw Twitch-account moderator is.
 
 De **client-ID hoort bij de software**, het **gebruikerstoken bij de moderator en

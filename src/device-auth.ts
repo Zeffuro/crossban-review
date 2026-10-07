@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { randomHex } from './platform.js';
 import { ProviderError } from './twitch.js';
 import type { Tokens } from './types.js';
 
@@ -8,7 +8,7 @@ const scopes = ['moderator:manage:banned_users', 'user:read:moderated_channels']
 
 export class DeviceAuth {
     private session: Session | null = null;
-    constructor(private readonly clientId: string, private readonly request: typeof fetch = fetch) {}
+    constructor(private readonly clientId: string, private readonly request: typeof fetch = fetch.bind(globalThis)) {}
 
     cancel(): void { this.session = null; }
 
@@ -35,7 +35,7 @@ export class DeviceAuth {
             throw new ProviderError('Twitch returned an unexpected login address.');
         }
         const interval = Math.max(5, data.interval);
-        const login: DeviceLogin = { id: randomBytes(16).toString('hex'), userCode: data.user_code, url: url.href,
+        const login: DeviceLogin = { id: randomHex(16), userCode: data.user_code, url: url.href,
             expiresAt: Date.now() + Math.min(1800, data.expires_in) * 1000, interval };
         this.session = { ...login, deviceCode: data.device_code, nextPoll: Date.now() + interval * 1000 };
         return login;

@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
     <title>Crossban Review</title>
-    <link rel="stylesheet" href="/styles.css">
-    <script src="/i18n.js" defer></script>
-    <script src="/app.js" defer></script>
-    <script src="/device-login.js" defer></script>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./i18n.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./device-login.js" defer></script>
+    <script src="./browser-ui.js" defer></script>
 </head>
 <body>
     <header class="topbar">
@@ -16,6 +17,10 @@
         <div class="account"><label for="language" class="sr-only">Language / Taal</label><select id="language" aria-label="Language / Taal"><option value="en">English</option><option value="nl">Nederlands</option></select><span id="connection">Connecting…</span><button id="connect" data-i18n="Connect Twitch">Connect Twitch</button><button id="disconnect" class="quiet" hidden data-i18n="Disconnect">Disconnect</button></div>
     </header>
     <main>
+        <section id="browserStorage" class="panel" hidden>
+            <div class="section-heading"><div><h2 data-i18n="Your browser workspace">Your browser workspace</h2><p data-i18n="Reports and screenshots stay in this browser. Sign in to Twitch each time you open the app. Download a backup before clearing browser data or changing computers.">Reports and screenshots stay in this browser. Sign in to Twitch each time you open the app. Download a backup before clearing browser data or changing computers.</p></div><a href="../" class="button quiet" data-i18n="Other ways to use the app">Other ways to use the app</a></div>
+            <div class="actions"><button id="backupDownload" class="quiet" data-i18n="Download backup">Download backup</button><a id="backupSave" class="button quiet" hidden data-i18n="Save backup file">Save backup file</a><button id="backupRestore" class="quiet" data-i18n="Restore backup…">Restore backup…</button><input id="backupFile" type="file" accept=".json,application/json" hidden><span id="workspaceMode" class="muted" role="status"></span></div>
+        </section>
         <div id="notice" role="status" aria-live="polite" hidden></div>
         <section id="setup" class="panel" hidden>
             <h2 data-i18n="Connect your Twitch application">Connect your Twitch application</h2>
@@ -38,9 +43,9 @@
             <p class="muted import-help" data-i18n="After import, open a report to attach PNG, JPEG or WebP screenshots, or paste an image from the clipboard. Check the exact Twitch account and evidence before approving.">After import, open a report to attach PNG, JPEG or WebP screenshots, or paste an image from the clipboard. Check the exact Twitch account and evidence before approving.</p>
             <details id="advancedImport">
                 <summary data-i18n="Advanced: DiscordChatExporter import">Advanced: DiscordChatExporter import</summary>
-                <p class="muted import-help" data-i18n-html="For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the &lt;code&gt;export/&lt;/code&gt; folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.">For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the <code>export/</code> folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.</p>
+                <p id="exportHelp" class="muted import-help" data-i18n-html="For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the &lt;code&gt;export/&lt;/code&gt; folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.">For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the <code>export/</code> folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.</p>
                 <p class="muted" data-i18n="This tool reads your local exports and imports screenshots; it does not access Discord history. Review import coverage and the evidence for every report.">This tool reads your local exports and imports screenshots; it does not access Discord history. Review import coverage and the evidence for every report.</p>
-                <div class="actions"><button id="importExport" class="quiet" data-i18n="Import export folder">Import export folder</button></div>
+                <input id="exportFolder" type="file" webkitdirectory multiple hidden><div class="actions"><button id="importExport" class="quiet" data-i18n="Import export folder">Import export folder</button></div>
                 <div id="importSummary" class="lookup-card" role="status" aria-live="polite" hidden></div>
             </details>
         </section>

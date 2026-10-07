@@ -104,6 +104,7 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
             '/app.js': ['public/app.js', 'text/javascript; charset=utf-8'],
             '/i18n.js': ['public/i18n.js', 'text/javascript; charset=utf-8'],
             '/device-login.js': ['public/device-login.js', 'text/javascript; charset=utf-8'],
+            '/browser-ui.js': ['public/browser-ui.js', 'text/javascript; charset=utf-8'],
             '/styles.css': ['public/styles.css', 'text/css; charset=utf-8'],
             '/README.md': ['README.md', 'text/plain; charset=utf-8'],
         };

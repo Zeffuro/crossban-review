@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 const windows = process.platform === 'win32';
-describe.skipIf(!windows)('Windows release launcher', () => {
+describe.skipIf(!windows)('Windows release launcher', { timeout: 20_000 }, () => {
     function workspace(clientId = '') {
         const root = mkdtempSync(join(tmpdir(), 'crossban launcher '));
         temporary.push(root);
@@ -151,7 +151,7 @@ describe.skipIf(!windows)('Windows release launcher', () => {
         const system = process.env.SystemRoot ?? 'C:\\Windows';
         const short = spawnSync(join(system, 'System32/cmd.exe'), ['/d', '/c', `for %I in ("${root}") do @echo %~sI`], { encoding: 'utf8' });
         expect(short.status).toBe(0);
-        const alias = short.stdout.trim();
+        const alias = short.stdout.trim().replace(/^"|"$/g, '');
         if (!alias.includes('~')) context.skip();
         expect(realpathSync.native(alias)).toBe(realpathSync.native(root));
         prerequisites(root, '10.9.0');

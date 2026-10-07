@@ -1,7 +1,6 @@
-import { createHash, randomUUID } from 'node:crypto';
-import { setTimeout as delay } from 'node:timers/promises';
+import { delay, randomUUID, sha256Hex } from './platform.js';
 import { parseReports, reportKey, validLogin } from './parser.js';
-import type { Storage } from './storage.js';
+import type { ReviewStorage } from './storage-port.js';
 import { ProviderError, type Twitch } from './twitch.js';
 import type { HistoryEntry, Report } from './types.js';
 
@@ -20,10 +19,10 @@ function validSourceUrl(value: unknown): value is string {
     } catch { return false; }
 }
 
-export class Review {
+export class Review<S extends ReviewStorage = ReviewStorage> {
     busy = false;
     private readonly plans = new Map<string, Plan>();
-    constructor(readonly storage: Storage, readonly twitch: Twitch, private readonly pause = () => delay(1200)) {}
+    constructor(readonly storage: S, readonly twitch: Twitch, private readonly pause = () => delay(1200)) {}
 
     async exclusive<T>(operation: () => Promise<T>): Promise<T> {
         if (this.busy) throw new ReviewError('Another operation is running. Wait for it to finish.', 409);
@@ -78,7 +77,7 @@ export class Review {
         }
         const existing = new Map(this.storage.database.reports.map(report => [reportKey(report), report]));
         for (const report of reports) {
-            if (report.sourceIdentity) report.sourceRevision = createHash('sha256').update(report.raw).digest('hex');
+            if (report.sourceIdentity) report.sourceRevision = sha256Hex(report.raw);
             const previous = this.findImportedReport(report, existing);
             const sourceMatch = previous?.sourceIdentity === report.sourceIdentity && !!report.sourceIdentity;
             if (!previous) {
@@ -218,7 +217,7 @@ export class Review {
         this.storage.database.history.push(entry);
         await this.storage.save();
         try {
-            entry.status = await this.twitch.changeBan(channelId, item.userId, `Crossban reviewed locally: ${item.reason || 'See original report'}`, unban);
+            entry.status = await this.twitch.changeBan(channelId, item.userId, `Crossban reviewed: ${item.reason || 'See original report'}`, unban);
             entry.message = entry.status === 'already_banned' ? 'Already banned; this tool did not create the ban.' : unban ? 'Unban completed.' : 'Permanent ban completed.';
         } catch (error) {
             entry.status = error instanceof ProviderError && !error.uncertain ? 'failed' : 'uncertain';

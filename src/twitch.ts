@@ -1,4 +1,4 @@
-import type { Storage } from './storage.js';
+import type { TokenStorage } from './storage-port.js';
 import type { Tokens, TwitchUser } from './types.js';
 
 export class ProviderError extends Error {
@@ -12,8 +12,8 @@ export class Twitch {
     private tokens: Tokens | null = null;
     private refreshPromise: Promise<Tokens> | null = null;
     private validatedAt = 0;
-    constructor(private readonly storage: Storage, readonly clientId: string, private readonly clientSecret: string,
-        private readonly request: typeof fetch = fetch) {}
+    constructor(private readonly storage: TokenStorage, readonly clientId: string, private readonly clientSecret: string,
+        private readonly request: typeof fetch = fetch.bind(globalThis)) {}
 
     get configured(): boolean { return Boolean(this.clientId); }
     get usesDeviceLogin(): boolean { return !this.clientSecret; }
