@@ -6,8 +6,8 @@ Crossban Review - Windows
 4. Keep the launcher window open while using the app.
 
 The launcher can help install Node.js and pnpm. Internet is needed for setup.
-Twitch login uses your personal account. A Public Twitch app client ID must
-be configured once; you do not need to create or paste a user token.
+Click Connect Twitch and sign in with your personal account. The app includes
+its public application ID; you do not need to register an app or paste a token.
 Instructions: README.md (English) or README.nl.md (Nederlands).
 Reports, screenshots and credentials stay on this computer.
 
@@ -19,7 +19,7 @@ Crossban Review - Windows (Nederlands)
 4. Houd het launchervenster open tijdens het gebruik.
 
 De launcher kan helpen Node.js en pnpm te installeren. Hiervoor is internet nodig.
-Je logt in met je persoonlijke Twitch-account. Stel eenmalig de client-ID van
-een Public Twitch-app in; je hoeft geen gebruikerstoken aan te maken of te plakken.
+Klik op Twitch verbinden en log in met je persoonlijke Twitch-account. De openbare
+applicatie-ID is meegeleverd; je hoeft geen app te registreren of token te plakken.
 Handleiding: README.nl.md (Nederlands) of README.md (English).
 Meldingen, screenshots en inloggegevens blijven op deze computer.

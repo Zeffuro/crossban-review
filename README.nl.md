@@ -21,9 +21,9 @@ Een melding is informatie om te beoordelen, geen automatische banopdracht.
    en start Start.cmd opnieuw.
 4. De launcher kan **pnpm 11** in de privégegevensmap van deze app installeren
    en installeert daarna de vastgelegde afhankelijkheden. Hiervoor is internet nodig.
-5. Vul bij het eerste gebruik eventueel de client-ID van een **Public
-   Twitch-applicatie** in (zie hieronder). Je mag dit overslaan en eerst meldingen
-   lokaal bekijken zonder Twitch te verbinden.
+5. Klik in de browser op **Twitch verbinden** en log in met je persoonlijke account.
+   Crossban Review bevat zijn eigen openbare applicatie-ID; voor normaal gebruik
+   hoef je geen applicatie te registreren of inloggegevens te kopiëren.
 6. Houd het launchervenster open tijdens het gebruik. **Ctrl+C** stopt de app.
 
 Bestaande `.env`-instellingen blijven behouden. De launcher vraagt niet om een
@@ -39,8 +39,8 @@ Je hebt **Node.js 22.16+** en **pnpm 11** nodig. Download of clone deze reposito
 pnpm install --frozen-lockfile
 ```
 
-Kopieer `.env.example` naar `.env`. Maak een **aparte openbare Twitch-applicatie**
-(clienttype **Public**) en vul de client-ID in bij `TWITCH_CLIENT_ID`.
+De meegeleverde openbare applicatie werkt zonder `.env`-bestand. Kopieer eventueel
+`.env.example` naar `.env` om een eigen Twitch-applicatie te configureren (zie hieronder).
 Laat `TWITCH_CLIENT_SECRET` leeg voor de aanbevolen inlogmethode.
 
 ```sh
@@ -64,7 +64,20 @@ De **client-ID hoort bij de software**, het **gebruikerstoken bij de moderator e
 diens rechten**. Je hebt geen botaccount of Discord-token nodig. Gebruik niet de
 applicatiegegevens van een andere bot en deel nooit een clientgeheim.
 
-Voor je eigen lokale installatie configureer je eenmalig een Twitch-app:
+De meegeleverde ID hoort bij de aparte Public-registratie van deze app. Hiermee
+krijgen andere gebruikers geen toegang tot het account, de tokens of de
+kanaalrechten van de beheerder. Iedereen logt zelf in; tokens en meldingen blijven
+op de eigen computer.
+
+Client-ID's zijn openbare identificatoren. Iemand kan dezelfde ID gebruiken om
+een inlogproces onder de geregistreerde appnaam te starten; dat kan worden misbruikt
+voor phishing. Keur alleen codes goed die je eigen vertrouwde versie van de app
+genereert en controleer de gevraagde rechten op Twitch. Houd clientgeheimen en
+gebruikerstokens privé.
+
+### Geavanceerd: een eigen Twitch-applicatie
+
+Voor een eigen registratie of een fork die je als een andere app publiceert:
 
 1. Open de [Twitch-ontwikkelaarsconsole](https://dev.twitch.tv/console/apps).
 2. Registreer een aparte applicatie met een unieke naam en clienttype **Public**.
@@ -75,10 +88,9 @@ Voor je eigen lokale installatie configureer je eenmalig een Twitch-app:
 4. Kopieer de client-ID naar `.env` en start opnieuw. Een openbare applicatie
    heeft **geen clientgeheim** nodig. Verbind daarna je persoonlijke Twitch-account.
 
-De projectbeheerder kan ook een aparte openbare applicatie voor Crossban Review
-registreren en de **openbare client-ID** delen met gebruikers van dezezelfde app.
-Deze repository bevat geen vooraf ingevulde client-ID. Iedereen logt afzonderlijk
-in; tokens en meldingen blijven op de eigen computer.
+Gebruik voor een andere applicatie een eigen registratie; Twitch waarschuwt tegen
+het delen van één client-ID tussen verschillende applicaties. Gebruikers van deze
+app kunnen de meegeleverde ID gebruiken.
 
 Een bestaande installatie met een eigen **Confidential**-applicatie mag client-ID
 en clientgeheim behouden; de app gebruikt dan de browsercallback. Neem het geheim

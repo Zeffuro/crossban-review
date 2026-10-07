@@ -132,15 +132,19 @@ function Ensure-Pnpm {
 function Configure-Client {
     $destination = Join-Path $root '.env'
     if (Test-Path -LiteralPath $destination) { return }
-    Write-Host (Message 'ClientIntro')
-    while ($true) {
-        $clientId = (Ask (Message 'ClientPrompt')).Trim()
-        if (-not $clientId) { return }
-        if ($clientId -match '^[a-zA-Z0-9]{10,100}$') { break }
-        Write-Host (Message 'ClientInvalid')
-    }
     $template = [IO.File]::ReadAllText((Join-Path $root '.env.example'))
-    $content = [regex]::Replace($template, '(?m)^TWITCH_CLIENT_ID=.*$', ('TWITCH_CLIENT_ID=' + $clientId))
+    $bundled = [regex]::Match($template, '(?m)^TWITCH_CLIENT_ID=([a-zA-Z0-9]{10,100})\r?$')
+    $content = $template
+    if (-not $bundled.Success) {
+        Write-Host (Message 'ClientIntro')
+        while ($true) {
+            $clientId = (Ask (Message 'ClientPrompt')).Trim()
+            if (-not $clientId) { return }
+            if ($clientId -match '^[a-zA-Z0-9]{10,100}$') { break }
+            Write-Host (Message 'ClientInvalid')
+        }
+        $content = [regex]::Replace($template, '(?m)^TWITCH_CLIENT_ID=.*$', ('TWITCH_CLIENT_ID=' + $clientId))
+    }
     $bytes = [Text.UTF8Encoding]::new($false).GetBytes($content)
     $file = [IO.File]::Open($destination, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write)
     try { $file.Write($bytes, 0, $bytes.Length) } finally { $file.Dispose() }

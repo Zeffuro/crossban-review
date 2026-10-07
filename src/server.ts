@@ -10,6 +10,7 @@ import { Twitch, ProviderError } from './twitch.js';
 import { validImage } from './evidence.js';
 import { importExportFolder } from './export-import.js';
 import { DeviceAuth } from './device-auth.js';
+import { twitchConfiguration } from './config.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.CROSSBAN_PORT ?? 4387);
@@ -18,7 +19,8 @@ const origin = `http://localhost:${port}`;
 const redirect = `${origin}/auth/twitch/callback`;
 const csrf = randomBytes(32).toString('hex');
 const storage = new Storage(process.env.CROSSBAN_DATA_DIR ? resolve(process.env.CROSSBAN_DATA_DIR) : resolve(root, 'data'));
-const twitch = new Twitch(storage, process.env.TWITCH_CLIENT_ID ?? '', process.env.TWITCH_CLIENT_SECRET ?? '');
+const configuration = twitchConfiguration();
+const twitch = new Twitch(storage, configuration.clientId, configuration.clientSecret);
 const deviceAuth = new DeviceAuth(twitch.clientId);
 const review = new Review(storage, twitch);
 let ready = false;

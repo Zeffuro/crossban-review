@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, resolve, join, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -17,14 +17,15 @@ afterEach(() => {
 
 const windows = process.platform === 'win32';
 describe.skipIf(!windows)('Windows release launcher', () => {
-    function workspace() {
+    function workspace(clientId = '') {
         const root = mkdtempSync(join(tmpdir(), 'crossban launcher '));
         temporary.push(root);
         mkdirSync(join(root, 'scripts'));
         mkdirSync(join(root, 'tools with spaces'));
         copyFileSync(resolve('scripts/Start-Review.ps1'), join(root, 'scripts/Start-Review.ps1'));
         copyFileSync(resolve('Start.cmd'), join(root, 'Start.cmd'));
-        copyFileSync(resolve('.env.example'), join(root, '.env.example'));
+        const template = readFileSync(resolve('.env.example'), 'utf8').replace(/^TWITCH_CLIENT_ID=.*$/m, `TWITCH_CLIENT_ID=${clientId}`);
+        writeFileSync(join(root, '.env.example'), template);
         return root;
     }
 
@@ -35,6 +36,16 @@ describe.skipIf(!windows)('Windows release launcher', () => {
     function prerequisites(root: string, pnpmVersion = '11.0.0') {
         stub(root, 'node', 'echo v22.16.0\nexit /b 0');
         stub(root, 'pnpm', `if "%~1"=="--version" (\n echo ${pnpmVersion}\n exit /b 0\n)\necho pnpm %* locale=%CROSSBAN_UI_LANGUAGE%>>"%LAUNCHER_TEST_LOG%"\nif "%~1"=="install" exit /b %LAUNCHER_TEST_INSTALL_EXIT%\nexit /b %LAUNCHER_TEST_SERVER_EXIT%`);
+    }
+
+    function expectBootstrap(log: string, root: string) {
+        const command = /^npm install --prefix (?:"([^"]+)"|(\S+)) (.+)\r?$/m.exec(log);
+        expect(command).not.toBeNull();
+        const prefix = command?.[1] ?? command?.[2];
+        if (!prefix) throw new Error('Expected an npm bootstrap prefix.');
+        expect(realpathSync.native(prefix).toLowerCase())
+            .toBe(realpathSync.native(join(root, 'data/launcher-tools')).toLowerCase());
+        expect(command?.[3]?.trim()).toBe('--no-audit --no-fund --no-package-lock pnpm@11');
     }
 
     function run(root: string, answers: string[], extra: Record<string, string> = {}, wrapper = false) {
@@ -117,7 +128,7 @@ describe.skipIf(!windows)('Windows release launcher', () => {
     });
 
     test('bootstraps local pnpm 11 while preserving incompatible global pnpm and an existing env file', () => {
-        const root = workspace();
+        const root = workspace('syntheticbundledclientid12345');
         prerequisites(root, '10.9.0');
         const globalBefore = readFileSync(join(root, 'tools with spaces/pnpm.cmd'), 'utf8');
         const envContents = 'TWITCH_CLIENT_ID=synthetic_client\nTWITCH_CLIENT_SECRET=synthetic_private_fixture\n';
@@ -126,12 +137,48 @@ describe.skipIf(!windows)('Windows release launcher', () => {
         stub(root, 'local-template', 'if "%~1"=="--version" (\n echo 11.3.0\n exit /b 0\n)\necho local-pnpm %* locale=%CROSSBAN_UI_LANGUAGE%>>"%LAUNCHER_TEST_LOG%"\nexit /b 0');
         const result = run(root, ['1', 'y', '']);
         expect(result.code).toBe(0);
-        expect(result.log).toContain(`npm install --prefix "${join(root, 'data/launcher-tools')}" --no-audit --no-fund --no-package-lock pnpm@11`);
+        expectBootstrap(result.log, root);
         expect(result.log).toContain('local-pnpm install --frozen-lockfile locale=en');
         expect(result.log).toContain('local-pnpm start --open locale=en');
         expect(readFileSync(join(root, 'tools with spaces/pnpm.cmd'), 'utf8')).toBe(globalBefore);
         expect(readFileSync(join(root, '.env'), 'utf8')).toBe(envContents);
         expect(result.output).not.toContain('synthetic_private_fixture');
+        expect(result.output).not.toContain('Application ID saved locally.');
+    });
+
+    test('bootstrap accepts equivalent Windows 8.3 paths when short names are available', (context) => {
+        const root = workspace();
+        const system = process.env.SystemRoot ?? 'C:\\Windows';
+        const short = spawnSync(join(system, 'System32/cmd.exe'), ['/d', '/c', `for %I in ("${root}") do @echo %~sI`], { encoding: 'utf8' });
+        expect(short.status).toBe(0);
+        const alias = short.stdout.trim();
+        if (!alias.includes('~')) context.skip();
+        expect(realpathSync.native(alias)).toBe(realpathSync.native(root));
+        prerequisites(root, '10.9.0');
+        stub(root, 'npm', 'echo npm %*>>"%LAUNCHER_TEST_LOG%"\nmkdir "%~3\\node_modules\\.bin"\ncopy /y "%~dp0local-template.cmd" "%~3\\node_modules\\.bin\\pnpm.cmd" >nul\nexit /b 0');
+        stub(root, 'local-template', 'if "%~1"=="--version" (\n echo 11.0.0\n exit /b 0\n)\necho local-pnpm %*>>"%LAUNCHER_TEST_LOG%"\nexit /b 0');
+        const result = run(alias, ['1', 'y', '', '']);
+        expect(result.code).toBe(0);
+        expectBootstrap(result.log, root);
+        expect(result.log).toContain('local-pnpm install --frozen-lockfile');
+        expect(result.log).toContain('local-pnpm start --open');
+    });
+
+    test.each(['en', 'nl'])('bundled Public client ID skips registration prompts and starts in %s', (language) => {
+        const root = workspace('syntheticbundledclientid12345');
+        prerequisites(root);
+        const template = readFileSync(join(root, '.env.example'), 'utf8');
+        const result = run(root, [language === 'nl' ? '2' : '1', '']);
+        expect(result.code).toBe(0);
+        expect(result.output).not.toContain('Public Twitch client');
+        expect(result.output).not.toContain('https://dev.twitch.tv/console/apps');
+        expect(result.output).toContain(language === 'nl'
+            ? 'Verbind je persoonlijke Twitch-account in de browser.'
+            : 'Connect your personal Twitch account in the browser.');
+        const saved = readFileSync(join(root, '.env'), 'utf8');
+        expect(saved).toBe(template);
+        expect(saved).toMatch(/^TWITCH_CLIENT_SECRET=\r?$/m);
+        expect(result.log).toBe(`pnpm install --frozen-lockfile locale=${language}\r\npnpm start --open locale=${language}\r\n`);
     });
 
     test('failed pnpm bootstrap stops before dependency installation', () => {
