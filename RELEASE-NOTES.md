@@ -1,3 +1,11 @@
+Crossban Review v0.1.1 fixes Windows startup and makes Twitch login easier.
+
+- The Windows launcher uses the registered default browser handler to open the app.
+- Manually opening localhost also applies the launcher's selected language. Changing the language in the app now survives refreshing.
+- Twitch login opens a popup that closes after authorization and attempts to bring the review screen back into focus. Blocked popups retain the ordinary tab link, with clearer return instructions in English and Dutch.
+
+To update a Windows copy, stop it with Ctrl+C, extract the new ZIP over the existing app files and run Start.cmd again. Keep your existing `data/` folder and `.env` file.
+
 Crossban Review is available in your browser and as a local Windows download, in English and Dutch.
 
 - [Choose browser or Windows](https://zeffuro.github.io/crossban-review/).

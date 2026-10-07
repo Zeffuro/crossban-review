@@ -1,6 +1,7 @@
 'use strict';
 
 const dutchMessages = {
+    'After you authorize, the login window closes when Twitch confirms your connection. If Twitch opens in a regular tab, return here without refreshing. This screen connects automatically.': 'Na het toestaan sluit het inlogvenster zodra Twitch je verbinding bevestigt. Opent Twitch in een gewoon tabblad, ga dan hierheen terug zonder te vernieuwen. Dit scherm maakt automatisch verbinding.',
     'Save backup file': 'Back-upbestand opslaan',
     'Backup ready. If the download did not start, choose Save backup file. Store it privately; it contains reports and screenshots.': 'Back-up gereed. Als de download niet is gestart, kies Back-upbestand opslaan. Bewaar deze privé; hij bevat meldingen en screenshots.',
     'Batch processing ended. Check action history for every result.': 'Batchverwerking beëindigd. Controleer de actiegeschiedenis voor elk resultaat.',
@@ -68,7 +69,7 @@ const dutchMessages = {
     'Use an HTTPS source link without embedded credentials, or leave it empty.': 'Gebruik een HTTPS-bronlink zonder ingesloten inloggegevens, of laat dit leeg.',
     'Set <code>TWITCH_CLIENT_ID</code> in <code>.env</code> to a separate Public Twitch application, then restart. No client secret or manual user token is needed. See README.md for setup.': 'Stel <code>TWITCH_CLIENT_ID</code> in <code>.env</code> in op een aparte openbare Twitch-applicatie en start opnieuw. Je hebt geen clientgeheim of handmatig gebruikerstoken nodig. Bekijk README.nl.md voor de installatie.',
     'Sign in with your Twitch account': 'Inloggen met je Twitch-account',
-    'Open Twitch in another tab, sign in and authorize this app. Keep this screen open. Never approve a code sent by someone else.': 'Open Twitch in een ander tabblad, log in en geef deze app toestemming. Houd dit scherm open. Keur nooit een code goed die iemand anders je toestuurt.',
+    'Open Twitch, sign in and authorize this app. Keep this screen open. Never approve a code sent by someone else.': 'Open Twitch, log in en geef deze app toestemming. Houd dit scherm open. Keur nooit een code goed die iemand anders je toestuurt.',
     'Your login code:': 'Je inlogcode:',
     'Open Twitch to sign in': 'Twitch openen om in te loggen',
     'Cancel login': 'Inloggen annuleren',
@@ -423,6 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('language').addEventListener('change', event => {
         language = event.target.value === 'nl' ? 'nl' : 'en';
         try { localStorage.setItem('crossban-review-language', language); } catch {}
+        try {
+            const url = new URL(location.href);
+            url.searchParams.set('lang', language);
+            history.replaceState(history.state, '', url);
+        } catch {}
         applyTranslations();
         document.dispatchEvent(new Event('ui-language-change'));
     });

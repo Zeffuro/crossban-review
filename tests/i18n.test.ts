@@ -6,6 +6,25 @@ const publicFile = (name: string) => readFile(new URL(`../public/${name}`, impor
 const decode = (value: string) => value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
 describe('English and Dutch interface catalog', () => {
+    it('updates the URL when changing language so refreshing retains the new choice', async () => {
+        let onReady!: () => void;
+        let onChange!: (event: { target: { value: string } }) => void;
+        let saved = 'nl';
+        let href = 'http://localhost:4387/?lang=nl&keep=yes#reports';
+        const context = createContext({
+            document: { documentElement: {}, querySelectorAll: () => [], dispatchEvent: () => {},
+                addEventListener: (_name: string, callback: () => void) => { onReady = callback; },
+                getElementById: () => ({ addEventListener: (_name: string, callback: typeof onChange) => { onChange = callback; } }) },
+            location: { search: '?lang=nl', href }, URL, URLSearchParams, Event,
+            history: { state: null, replaceState: (_state: unknown, _title: string, url: URL) => { href = String(url); } },
+            localStorage: { getItem: () => saved, setItem: (_key: string, value: string) => { saved = value; } },
+        });
+        runInContext(await publicFile('i18n.js'), context);
+        onReady(); onChange({ target: { value: 'en' } });
+        expect(saved).toBe('en');
+        expect(href).toBe('http://localhost:4387/?lang=en&keep=yes#reports');
+        expect(runInContext('uiLocale()', context)).toBe('en-GB');
+    });
     it('applies the launcher language before rendering and remembers it', async () => {
         let saved = 'en';
         const context = createContext({

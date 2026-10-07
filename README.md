@@ -89,6 +89,11 @@ You can import reports and screenshots before configuring or connecting Twitch.
 **No manual token generation or pasting.** Select **Connect Twitch**, open the
 Twitch activation link, sign in with your **personal Twitch account**, and approve
 the requested permissions. Keep this app open while authorizing in the other tab.
+The login link opens a popup which closes when Twitch confirms authorization,
+then attempts to focus this app. If popups are blocked or you open a regular tab,
+Twitch may finish on its Connections page: return to the review tab without
+refreshing it. It detects authorization automatically; no callback is needed for
+this public device flow. Browser policies may prevent automatic focus.
 The app obtains tokens automatically. The local version encrypts them on disk;
 the browser version keeps them only until the page closes or reloads. You can only act in your own
 channel or channels where that Twitch account is a moderator.

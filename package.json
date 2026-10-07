@@ -1,6 +1,6 @@
 {
   "name": "crossban-review",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A Twitch moderation workspace for reviewing reports and explicitly selected bans, locally or in your browser.",
   "license": "MIT",
   "engines": {

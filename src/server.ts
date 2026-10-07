@@ -16,6 +16,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.CROSSBAN_PORT ?? 4387);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid local port.');
 const origin = `http://localhost:${port}`;
+const language = process.env.CROSSBAN_UI_LANGUAGE;
+const startupUrl = language === 'en' || language === 'nl' ? `${origin}/?lang=${language}` : origin;
 const redirect = `${origin}/auth/twitch/callback`;
 const csrf = randomBytes(32).toString('hex');
 const storage = new Storage(process.env.CROSSBAN_DATA_DIR ? resolve(process.env.CROSSBAN_DATA_DIR) : resolve(root, 'data'));
@@ -97,6 +99,12 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
         return;
     }
     if (req.method === 'GET') {
+        if (url.pathname === '/' && (language === 'en' || language === 'nl') && !['en', 'nl'].includes(url.searchParams.get('lang') ?? '')) {
+            url.searchParams.set('lang', language);
+            res.writeHead(303, { Location: `${url.pathname}${url.search}` });
+            res.end();
+            return;
+        }
         if (url.pathname === '/api/state') return json(res, state());
         if (url.pathname === '/api/channels') return json(res, { channels: await review.exclusive(() => twitch.channels()) });
         const staticFiles: Record<string, [string, string]> = {
@@ -218,12 +226,12 @@ try {
         }
     }, 30 * 60000);
     validationTimer.unref();
-    console.log(`Crossban Review: ${origin}\nLocal data: ${storage.directory}\nPress Ctrl+C to stop.`);
+    console.log(`Crossban Review: ${startupUrl}\nLocal data: ${storage.directory}\nPress Ctrl+C to stop.`);
     if (process.platform === 'win32' && process.argv.includes('--open')) {
-        const language = process.env.CROSSBAN_UI_LANGUAGE;
-        const openUrl = language === 'en' || language === 'nl' ? `${origin}/?lang=${language}` : origin;
-        const browser = spawn('explorer.exe', [openUrl], { detached: true, stdio: 'ignore', windowsHide: true });
-        browser.on('error', () => console.log(`Open ${openUrl} in your browser.`));
+        const browser = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+            '-File', resolve(root, 'scripts/Open-Browser.ps1'), '-Url', startupUrl], { detached: true, stdio: 'ignore', windowsHide: true });
+        browser.on('error', () => console.log(`Open ${startupUrl} in your browser.`));
+        browser.on('exit', code => { if (code !== 0) console.log(`Open ${startupUrl} in your browser.`); });
         browser.unref();
     }
 } catch (error) {

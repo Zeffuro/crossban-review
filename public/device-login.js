@@ -2,12 +2,18 @@
 
 let deviceLogin = null;
 let deviceTimer = null;
+let deviceWindow = null;
 
-function stopDeviceLogin() {
+function stopDeviceLogin(returnFocus = false) {
     clearTimeout(deviceTimer);
     deviceTimer = null;
     deviceLogin = null;
     $('deviceLogin').hidden = true;
+    if (deviceWindow) {
+        try { deviceWindow.close(); } catch {}
+        deviceWindow = null;
+        if (returnFocus) { try { window.focus(); } catch {} }
+    }
 }
 
 function renderDeviceLogin() {
@@ -44,7 +50,7 @@ async function pollDeviceLogin() {
         const result = await request('/api/auth/poll', { loginId: login.id });
         if (deviceLogin !== login) return;
         if (result.pending) { scheduleDevicePoll(); return; }
-        stopDeviceLogin();
+        stopDeviceLogin(true);
         await applyState(result);
         notice(t('Twitch connected.'));
     } catch (error) {
@@ -60,4 +66,24 @@ $('cancelLogin').addEventListener('click', () => perform(async () => {
     stopDeviceLogin();
     return result;
 }, t('Login cancelled.')));
+$('deviceLink').addEventListener('click', event => {
+    if (!deviceLogin || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    try {
+        if (deviceWindow && !deviceWindow.closed) {
+            deviceWindow.focus();
+            event.preventDefault();
+            return;
+        }
+        const popup = window.open('about:blank', '_blank', 'popup,width=520,height=760');
+        if (!popup) return;
+        deviceWindow = popup;
+        // Keep our close/focus handle while giving Twitch no access to the review tab.
+        popup.opener = null;
+        popup.location.href = deviceLogin.url;
+        event.preventDefault();
+    } catch {
+        if (deviceWindow) { try { deviceWindow.close(); } catch {} }
+        deviceWindow = null;
+    }
+});
 document.addEventListener('ui-language-change', renderDeviceLogin);

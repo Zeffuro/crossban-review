@@ -91,7 +91,12 @@ Kies **Nederlands** bovenaan; de app onthoudt je taalkeuze op deze computer.
 **Je hoeft geen token aan te maken of te plakken.** Klik op **Twitch verbinden**,
 open de inloglink, log in met je **persoonlijke Twitch-account** en geef de app
 toestemming. Houd het beoordelingsscherm open terwijl je in het andere tabblad
-inlogt. De app ontvangt de tokens zelf. De lokale versie bewaart ze versleuteld; de
+inlogt. De inloglink opent een popup die sluit zodra Twitch toestemming bevestigt;
+de app probeert daarna dit scherm weer te activeren. Bij geblokkeerde popups of
+een gewoon tabblad kan Twitch op de pagina Verbindingen eindigen. Ga dan terug
+naar het beoordelingsscherm zonder te vernieuwen. De app herkent de toestemming
+automatisch; deze openbare inlogmethode gebruikt geen callback. Je browser kan
+automatisch activeren blokkeren. De app ontvangt de tokens zelf. De lokale versie bewaart ze versleuteld; de
 browserapp houdt ze alleen in het geheugen tot je de pagina sluit of vernieuwt.
 Je kunt alleen handelen in je eigen kanaal of waar jouw Twitch-account moderator is.
 
