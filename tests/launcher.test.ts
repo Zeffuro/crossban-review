@@ -149,7 +149,8 @@ describe.skipIf(!windows)('Windows release launcher', { timeout: 20_000 }, () =>
     test('bootstrap accepts equivalent Windows 8.3 paths when short names are available', (context) => {
         const root = workspace();
         const system = process.env.SystemRoot ?? 'C:\\Windows';
-        const short = spawnSync(join(system, 'System32/cmd.exe'), ['/d', '/c', `for %I in ("${root}") do @echo %~sI`], { encoding: 'utf8' });
+        writeFileSync(join(root, 'short-path.cmd'), '@echo off\r\nfor %%I in (.) do @echo %%~fsI\r\n');
+        const short = spawnSync(join(system, 'System32/cmd.exe'), ['/d', '/c', 'short-path.cmd'], { cwd: root, encoding: 'utf8' });
         expect(short.status).toBe(0);
         const alias = short.stdout.trim().replace(/^"|"$/g, '');
         if (!alias.includes('~')) context.skip();
