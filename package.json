@@ -1,0 +1,21 @@
+{
+  "name": "crossban-review",
+  "version": "0.1.0",
+  "description": "A local Twitch moderation workspace for reviewing reports, evidence and explicitly selected bans.",
+  "license": "MIT",
+  "engines": { "node": ">=22.16.0" },
+  "files": ["src/", "public/", "tests/", "examples/", "scripts/", ".github/", ".env.example", "Start.cmd", "START-HERE.txt", "README.md", "README.nl.md", "LICENSE", "tsconfig.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"],
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --import tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

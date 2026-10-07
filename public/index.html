@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Crossban Review</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/i18n.js" defer></script>
+    <script src="/app.js" defer></script>
+    <script src="/device-login.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <div><span class="eyebrow" data-i18n="LOCAL MODERATION WORKSPACE">LOCAL MODERATION WORKSPACE</span><h1>Crossban <span>Review</span></h1></div>
+        <div class="account"><label for="language" class="sr-only">Language / Taal</label><select id="language" aria-label="Language / Taal"><option value="en">English</option><option value="nl">Nederlands</option></select><span id="connection">Connecting…</span><button id="connect" data-i18n="Connect Twitch">Connect Twitch</button><button id="disconnect" class="quiet" hidden data-i18n="Disconnect">Disconnect</button></div>
+    </header>
+    <main>
+        <div id="notice" role="status" aria-live="polite" hidden></div>
+        <section id="setup" class="panel" hidden>
+            <h2 data-i18n="Connect your Twitch application">Connect your Twitch application</h2>
+            <p data-i18n-html="Set &lt;code&gt;TWITCH_CLIENT_ID&lt;/code&gt; in &lt;code&gt;.env&lt;/code&gt; to a separate Public Twitch application, then restart. No client secret or manual user token is needed. See README.md for setup.">Set <code>TWITCH_CLIENT_ID</code> in <code>.env</code> to a separate Public Twitch application, then restart. No client secret or manual user token is needed. See README.md for setup.</p>
+            <code class="redirect">http://localhost:4387/auth/twitch/callback</code>
+        </section>
+        <section id="deviceLogin" class="panel" hidden>
+            <h2 data-i18n="Sign in with your Twitch account">Sign in with your Twitch account</h2>
+            <p data-i18n="Open Twitch in another tab, sign in and authorize this app. Keep this screen open. Never approve a code sent by someone else.">Open Twitch in another tab, sign in and authorize this app. Keep this screen open. Never approve a code sent by someone else.</p>
+            <p><span data-i18n="Your login code:">Your login code:</span> <code id="deviceUserCode"></code></p>
+            <p id="deviceExpiry" class="muted"></p>
+            <div class="actions"><a id="deviceLink" class="button" target="_blank" rel="noopener noreferrer" data-i18n="Open Twitch to sign in">Open Twitch to sign in</a><button id="cancelLogin" class="quiet" data-i18n="Cancel login">Cancel login</button></div>
+        </section>
+        <section class="panel import-panel">
+            <div class="section-heading"><div><h2 data-i18n="Bring in reports">Bring in reports</h2><p data-i18n="Paste report text or a list of Twitch usernames, then attach screenshots to each report.">Paste report text or a list of Twitch usernames, then attach screenshots to each report.</p></div><span class="tag" data-i18n="Manual evidence · Human review">Manual evidence · Human review</span></div>
+            <p class="muted import-help" data-i18n-html="Use one username per line, or reports with &lt;code&gt;Streamer:&lt;/code&gt;, &lt;code&gt;Username:&lt;/code&gt; and &lt;code&gt;Reason:&lt;/code&gt; fields. Dutch &lt;code&gt;Naam:&lt;/code&gt; and &lt;code&gt;Reden:&lt;/code&gt; fields also work. Separate reports with a blank line.">Use one username per line, or reports with <code>Streamer:</code>, <code>Username:</code> and <code>Reason:</code> fields. Dutch <code>Naam:</code> and <code>Reden:</code> fields also work. Separate reports with a blank line.</p>
+            <label for="importText" class="sr-only" data-i18n="Report text or Twitch username list">Report text or Twitch username list</label>
+            <textarea id="importText" rows="5" placeholder="Paste reports or one Twitch username per line…" data-i18n-placeholder="Paste reports or one Twitch username per line…"></textarea>
+            <div class="actions"><button id="import" data-i18n="Import reports">Import reports</button><label class="button quiet" for="textFile" data-i18n="Open .txt file">Open .txt file</label><input id="textFile" type="file" accept=".txt,text/plain" hidden><button id="demo" class="quiet" data-i18n="Insert synthetic example">Insert synthetic example</button><span class="muted" data-i18n="Reports and evidence stay on this computer.">Reports and evidence stay on this computer.</span></div>
+            <p class="muted import-help" data-i18n="After import, open a report to attach PNG, JPEG or WebP screenshots, or paste an image from the clipboard. Check the exact Twitch account and evidence before approving.">After import, open a report to attach PNG, JPEG or WebP screenshots, or paste an image from the clipboard. Check the exact Twitch account and evidence before approving.</p>
+            <details id="advancedImport">
+                <summary data-i18n="Advanced: DiscordChatExporter import">Advanced: DiscordChatExporter import</summary>
+                <p class="muted import-help" data-i18n-html="For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the &lt;code&gt;export/&lt;/code&gt; folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.">For many Discord reports, DiscordChatExporter can export JSON and download attachment assets. Put those files in the <code>export/</code> folder beside the launcher, then choose Import export folder. Repeated imports avoid duplicates.</p>
+                <p class="muted" data-i18n="This tool reads your local exports and imports screenshots; it does not access Discord history. Review import coverage and the evidence for every report.">This tool reads your local exports and imports screenshots; it does not access Discord history. Review import coverage and the evidence for every report.</p>
+                <div class="actions"><button id="importExport" class="quiet" data-i18n="Import export folder">Import export folder</button></div>
+                <div id="importSummary" class="lookup-card" role="status" aria-live="polite" hidden></div>
+            </details>
+        </section>
+        <div class="workspace">
+            <section class="panel queue-panel">
+                <div class="section-heading"><div><h2><span data-i18n="Review queue">Review queue</span> <span id="reportCount" class="count">0</span></h2><p data-i18n="Select only the accounts you have reviewed.">Select only the accounts you have reviewed.</p></div><button id="resolve" class="quiet" data-i18n="Look up Twitch users">Look up Twitch users</button></div>
+                <div class="queue-tools"><label for="filter" class="sr-only" data-i18n="Filter reports">Filter reports</label><input id="filter" placeholder="Filter login or reason" data-i18n-placeholder="Filter login or reason"><select id="statusFilter" aria-label="Filter by decision" data-i18n-aria-label="Filter by decision"><option value="all" data-i18n="All decisions">All decisions</option><option value="pending" data-i18n="Pending">Pending</option><option value="approved" data-i18n="Approved">Approved</option><option value="skipped" data-i18n="Skipped">Skipped</option></select></div>
+                <div id="queue" class="queue"></div>
+                <div class="batch"><div><strong id="selectedCount">0 selected</strong><p class="muted" data-i18n="Permanent bans require a final review.">Permanent bans require a final review.</p></div><label for="channel" data-i18n="Target channel">Target channel</label><select id="channel"><option value="" data-i18n="Connect Twitch to choose a channel">Connect Twitch to choose a channel</option></select><button id="prepare" disabled data-i18n="Review selected bans">Review selected bans</button></div>
+            </section>
+            <section class="panel detail-panel" aria-labelledby="detailHeading">
+                <div class="section-heading"><h2 id="detailHeading" data-i18n="Report details">Report details</h2><span class="tag" data-i18n="Human review">Human review</span></div>
+                <div id="detailEmpty" class="empty"><span class="empty-icon">↗</span><h3 data-i18n="Start with a report">Start with a report</h3><p data-i18n="Open a report to check the exact Twitch account, reason, and attached evidence.">Open a report to check the exact Twitch account, reason, and attached evidence.</p></div>
+                <div id="detail" hidden></div>
+            </section>
+        </div>
+        <section class="panel history-panel"><div class="section-heading"><div><h2 data-i18n="Action history">Action history</h2><p data-i18n="Recorded results for this workspace. Unbanning is always a separate action.">Recorded results for this workspace. Unbanning is always a separate action.</p></div><button id="refresh" class="quiet" data-i18n="Refresh">Refresh</button></div><div id="history"></div></section>
+        <footer data-i18n="Deterministic parsing and exact Twitch lookup. No AI evidence analysis or automatic verdicts.">Deterministic parsing and exact Twitch lookup. No AI evidence analysis or automatic verdicts.</footer>
+    </main>
+    <dialog id="confirmDialog" aria-labelledby="confirmTitle"><form id="confirmForm"><h2 id="confirmTitle">Review permanent bans</h2><p id="confirmDescription"></p><div id="planItems" class="plan-items"></div><label class="check-line"><input id="reviewed" type="checkbox" required> <span data-i18n="I have reviewed the reasons and screenshots for every selected account.">I have reviewed the reasons and screenshots for every selected account.</span></label><label for="confirmation" id="confirmationLabel">Type the target channel login</label><input id="confirmation" autocomplete="off" spellcheck="false" required><p id="planExpiry" class="muted"></p><div class="actions"><button id="confirmAction" type="submit" class="danger">Confirm permanent bans</button><button id="cancelDialog" type="button" class="quiet" data-i18n="Cancel">Cancel</button></div></form></dialog>
+</body>
+</html>

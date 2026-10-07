@@ -1,0 +1,7 @@
+Channel: example_channel
+Username: synthetic_example_482
+Reason: Synthetic example only. Replace this text with a report you have reviewed.
+
+Channel: example_channel
+Username: synthetic_example_739
+Reason: Another synthetic example. Attach the actual evidence before reviewing.
