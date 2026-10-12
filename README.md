@@ -161,6 +161,41 @@ reconnection instead of replaying a potentially consumed token.
 6. Read the recorded results. Unbanning is a separate confirmed action and is
    offered only for successful bans recorded by this tool.
 
+### Screenshots, splitting and optional OCR
+
+Click a screenshot to open the image viewer inside the app. Use **Zoom** and
+**Fit image**, drag to pan, or use the viewport's arrow keys to scroll. Previous
+and next image buttons let you compare evidence without opening new browser tabs.
+
+If screenshots show different accounts, check the **Move screenshot** boxes and
+choose **Move selected screenshots to a new report…**. Enter the account and its
+own reason. This moves the selected images and creates an unresolved, pending
+report; both reports need reviewing again. Moving all images is allowed; the
+original report stays as a source record. Reimporting the same Discord export
+keeps the screenshots separate. Changes to the original source require a fresh
+review of the affected reports and keep the existing action history.
+
+In the image viewer, **Read text (OCR)** uses free
+[Tesseract.js](https://github.com/naptha/tesseract.js). **Select text area** lets
+you drag a rectangle around a username or relevant chat line before reading.
+The engine and English character model download from jsDelivr on demand; they
+are not included in the repository or ZIP. Recognition runs in your browser;
+the screenshot is not uploaded to an OCR service. The first use requires internet
+access, and recognition can be cancelled. Pinned CDN assets are used; the main
+loader script has an integrity check.
+
+Possible chat senders, mentioned accounts and other text are labelled separately.
+**Use as draft** only fills the username input. Compare it with the image, correct
+any spelling, then **Save login** and look up the account. OCR can miss underscores,
+split names or include moderators and mentioned accounts. It never saves, approves,
+selects or bans a suggested name. **Copy name** and the expandable **Recognized text**
+are available for manual use.
+
+You can import the entire Discord channel each day. Unchanged imports preserve
+manually corrected usernames and review decisions; real changes to text or source
+screenshots require another review. Successful and uncertain actions remain in
+history and keep their existing duplicate-action safeguards.
+
 Report fields work in English and Dutch, including mixed-language reports:
 
 ```text
@@ -240,6 +275,8 @@ pnpm test
 node --check public/app.js
 node --check public/i18n.js
 node --check public/device-login.js
+node --check public/evidence-ui.js
+node --check public/ocr.js
 ```
 
 Tests use synthetic reports, temporary data and mocked providers. They do not send

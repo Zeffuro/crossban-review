@@ -123,9 +123,10 @@ export function createBrowserRuntime(options: RuntimeOptions = {}): BrowserRunti
                 else if (path === '/api/unban' && method === 'POST') await review.unban(stringField(input, 'historyId'), stringField(input, 'confirmation'));
                 else if (path === '/api/reconcile' && method === 'POST') await review.reconcile(stringField(input, 'historyId'), stringField(input, 'outcome'), input.reviewed === true);
                 else {
-                    const match = /^\/api\/reports\/([a-f0-9-]{1,100})(\/evidence)?$/.exec(path);
+                    const match = /^\/api\/reports\/([a-f0-9-]{1,100})(\/evidence|\/split)?$/.exec(path);
                     if (!match) throw new ReviewError('Not found.', 404);
-                    if (match[2] && method === 'POST') {
+                    if (match[2] === '/split' && method === 'POST') await review.split(match[1]!, input);
+                    else if (match[2] === '/evidence' && method === 'POST') {
                         const report = review.report(match[1]!);
                         const dataUrl = stringField(input, 'dataUrl', 12 * 1024 * 1024);
                         const image = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);

@@ -23,6 +23,11 @@ export interface Report {
     sourceRevision?: string;
     sourceWithdrawn?: boolean;
     sourceMessageIds?: string[];
+    sourceEvidence?: string[];
+    splitEvidence?: string[];
+    splitFrom?: string;
+    splitSourceRevision?: string;
+    sourceConflict?: boolean;
 }
 
 export interface ImportSummary {

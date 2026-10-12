@@ -100,6 +100,52 @@ describe('Discord export association and evidence import', () => {
         expect(report.decision).toBe('pending');
         expect(storage.database.reports).toHaveLength(1);
     });
+    it('keeps screenshot-based corrections, decisions and action history after restart and a full channel reimport', async () => {
+        const folder = await mkdtemp(resolve(tmpdir(), 'crossban-restart-'));
+        const path = resolve(folder, 'export.json');
+        const screenshotOnly = 'Streamer: example\nReden: Screenshot identifies the account';
+        const named = 'Streamer: example\nNaam: another_user\nReden: Synthetic report';
+        const messages = [message('10', screenshotOnly, [{ id: '5', url: 'image.png', fileName: 'image.png' }]), message('11', named)];
+        await writeFile(resolve(folder, 'image.png'), png);
+        await writeFile(path, JSON.stringify(exported(messages)));
+        const storage = new Storage(resolve(folder, 'data')); await storage.initialize();
+        const twitch = { users: vi.fn(async (names: string[]) => names.map(login => ({ id: login, login, displayName: login, profileImageUrl: '', createdAt: '' }))) } as unknown as Twitch;
+        const review = new Review(storage, twitch);
+        await importExportFolder(review, folder);
+        const unnamed = storage.database.reports.find(report => report.originalLogin === '')!;
+        const other = storage.database.reports.find(report => report.originalLogin === 'another_user')!;
+        await review.update(unnamed.id, { login: 'corrected_user' });
+        await review.resolve([unnamed.id, other.id]);
+        await review.update(unnamed.id, { decision: 'skipped' });
+        await review.update(other.id, { decision: 'approved' });
+        storage.database.history.push(
+            { id: 'synthetic-history-1', reportId: unnamed.id, userId: 'corrected_user', login: 'corrected_user',
+                channelId: 'channel', channelLogin: 'example', action: 'ban', status: 'already_banned', message: '', at: new Date().toISOString() },
+            { id: 'synthetic-history-2', reportId: other.id, userId: 'another_user', login: 'another_user',
+                channelId: 'channel', channelLogin: 'example', action: 'ban', status: 'success', message: '', at: new Date().toISOString() },
+        );
+        await storage.save();
+        const evidence = [...unnamed.evidence];
+
+        const restarted = new Storage(resolve(folder, 'data')); await restarted.initialize();
+        const afterRestart = new Review(restarted, twitch);
+        await importExportFolder(afterRestart, folder);
+        expect(restarted.database.reports).toHaveLength(2);
+        expect(restarted.database.reports.find(report => report.id === unnamed.id)).toMatchObject({
+            login: 'corrected_user', originalLogin: '', decision: 'skipped', lookup: 'exists', evidence,
+        });
+        expect(restarted.database.reports.find(report => report.id === other.id)).toMatchObject({ decision: 'approved', lookup: 'exists' });
+        expect(restarted.database.history.map(entry => entry.status)).toEqual(['already_banned', 'success']);
+        await importExportFolder(afterRestart, folder);
+        expect(restarted.database.reports.find(report => report.id === unnamed.id)?.decision).toBe('skipped');
+        expect(restarted.database.history).toHaveLength(2);
+
+        await writeFile(path, JSON.stringify(exported([message('10', `${screenshotOnly}\nAdditional context`, messages[0]!.attachments), messages[1]!])));
+        await importExportFolder(afterRestart, folder);
+        expect(restarted.database.reports.find(report => report.id === unnamed.id)).toMatchObject({ login: 'corrected_user', decision: 'pending' });
+        expect(restarted.database.reports.find(report => report.id === other.id)?.decision).toBe('approved');
+        expect(restarted.database.history).toHaveLength(2);
+    });
     it('records every failed or unassigned attachment instead of quietly discarding it', async () => {
         const folder = await mkdtemp(resolve(tmpdir(), 'crossban-failure-'));
         const storage = new Storage(resolve(folder, 'data'));

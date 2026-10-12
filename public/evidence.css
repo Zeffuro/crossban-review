@@ -1,0 +1,123 @@
+.evidence-card {
+    min-width:0;
+}
+.image-preview {
+    display:block;
+    padding:0;
+    width:100%;
+    background:transparent;
+    cursor:zoom-in;
+}
+.evidence-card .check-line {
+    margin:8px 0 4px;
+    font-size:.8rem;
+}
+.image-dialog {
+    max-width:1200px;
+    max-height:92vh;
+    overflow:auto;
+}
+.image-dialog .section-heading {
+    margin-bottom:10px;
+}
+.image-toolbar {
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:12px 0;
+}
+.image-toolbar button {
+    font-size:.82rem;
+}
+#imageZoom {
+    width:140px;
+    padding:0;
+}
+#zoomPercent {
+    min-width:42px;
+    font-variant-numeric:tabular-nums;
+}
+.image-viewport {
+    height:clamp(200px,42vh,520px);
+    overflow:auto;
+    border:1px solid #574364;
+    border-radius:8px;
+    background:#100e15;
+    cursor:grab;
+    touch-action:none;
+}
+.image-viewport:active {
+    cursor:grabbing;
+}
+.image-viewport.selecting-area {
+    cursor:crosshair;
+}
+.image-stage {
+    position:relative;
+    width:max-content;
+}
+.image-analysis:has(#ocrResult:not([hidden])) {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:16px;
+}
+#ocrResult {
+    min-width:0;
+    max-height:clamp(200px,42vh,520px);
+    overflow:auto;
+}
+#ocrResult p {
+    font-size:.78rem;
+}
+#viewerImage {
+    display:block;
+    max-width:none;
+    user-select:none;
+    -webkit-user-drag:none;
+}
+.ocr-crop {
+    position:absolute;
+    pointer-events:none;
+    border:2px dashed #c9a0ff;
+    background:#a379d829;
+    box-sizing:border-box;
+}
+.ocr-candidates {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:12px 0;
+}
+.ocr-candidate {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    padding:7px;
+    background:#16101d;
+    border:1px solid #514060;
+    border-radius:8px;
+}
+.ocr-candidate button {
+    padding:6px 8px;
+    font-size:.76rem;
+}
+#splitForm textarea {
+    margin-bottom:15px;
+}
+#splitError {
+    color:#ffb9b9;
+}
+.ocr-about {
+    color:var(--muted);
+    font-size:.8rem;
+}
+.ocr-about p {
+    margin:10px 0 0;
+}
+@media (max-width:800px) {
+    .image-analysis:has(#ocrResult:not([hidden])) {
+        grid-template-columns:1fr;
+    }
+}

@@ -6,10 +6,13 @@
     <meta name="color-scheme" content="dark">
     <title>Crossban Review</title>
     <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./evidence.css">
     <script src="./i18n.js" defer></script>
     <script src="./app.js" defer></script>
     <script src="./device-login.js" defer></script>
     <script src="./browser-ui.js" defer></script>
+    <script src="./ocr.js" defer></script>
+    <script src="./evidence-ui.js" defer></script>
 </head>
 <body>
     <header class="topbar">
@@ -67,5 +70,21 @@
         <footer data-i18n="Deterministic parsing and exact Twitch lookup. No AI evidence analysis or automatic verdicts.">Deterministic parsing and exact Twitch lookup. No AI evidence analysis or automatic verdicts.</footer>
     </main>
     <dialog id="confirmDialog" aria-labelledby="confirmTitle"><form id="confirmForm"><h2 id="confirmTitle">Review permanent bans</h2><p id="confirmDescription"></p><div id="planItems" class="plan-items"></div><label class="check-line"><input id="reviewed" type="checkbox" required> <span data-i18n="I have reviewed the reasons and screenshots for every selected account.">I have reviewed the reasons and screenshots for every selected account.</span></label><label for="confirmation" id="confirmationLabel">Type the target channel login</label><input id="confirmation" autocomplete="off" spellcheck="false" required><p id="planExpiry" class="muted"></p><div class="actions"><button id="confirmAction" type="submit" class="danger">Confirm permanent bans</button><button id="cancelDialog" type="button" class="quiet" data-i18n="Cancel">Cancel</button></div></form></dialog>
+    <dialog id="evidenceDialog" class="image-dialog" aria-labelledby="evidenceTitle">
+        <div class="section-heading"><h2 id="evidenceTitle" data-i18n="Screenshot viewer">Screenshot viewer</h2><button id="closeEvidence" class="quiet" data-i18n="Close">Close</button></div>
+        <div class="image-toolbar">
+            <button id="previousEvidence" class="quiet" data-i18n="Previous image">Previous image</button><span id="imageNumber" class="muted"></span><button id="nextEvidence" class="quiet" data-i18n="Next image">Next image</button>
+            <label for="imageZoom" data-i18n="Zoom">Zoom</label><input id="imageZoom" type="range" min="5" max="400" step="5" value="100"><output id="zoomPercent" for="imageZoom">100%</output><button id="fitEvidence" class="quiet" data-i18n="Fit image">Fit image</button>
+        </div>
+        <p class="muted" data-i18n="Drag to pan, or select a text area to limit OCR. Zooming does not change the saved screenshot.">Drag to pan, or select a text area to limit OCR. Zooming does not change the saved screenshot.</p>
+        <div class="image-analysis">
+            <div id="imageViewport" class="image-viewport" tabindex="0" aria-label="Screenshot; use arrow keys to scroll" data-i18n-aria-label="Screenshot; use arrow keys to scroll"><div id="imageStage" class="image-stage"><img id="viewerImage" alt="Screenshot evidence"><div id="ocrCrop" class="ocr-crop" hidden></div></div></div>
+            <section id="ocrResult" hidden><h3 data-i18n="Possible usernames">Possible usernames</h3><p class="muted" data-i18n="Chat senders, mentioned accounts and moderators can all appear in an image. A suggestion is not a moderation decision.">Chat senders, mentioned accounts and moderators can all appear in an image. A suggestion is not a moderation decision.</p><div id="ocrCandidates" class="ocr-candidates"></div><details><summary data-i18n="Recognized text">Recognized text</summary><label for="ocrText" class="sr-only" data-i18n="Recognized text">Recognized text</label><textarea id="ocrText" rows="5" readonly></textarea><button id="copyOcrText" class="quiet" data-i18n="Copy text">Copy text</button></details></section>
+        </div>
+        <div class="actions image-toolbar"><button id="selectOcrArea" class="quiet" aria-pressed="false" data-i18n="Select text area">Select text area</button><button id="clearOcrArea" class="quiet" disabled data-i18n="Clear text area">Clear text area</button><button id="readOcr" data-i18n="Read text (OCR)">Read text (OCR)</button><button id="cancelOcr" class="quiet" hidden data-i18n="Cancel OCR">Cancel OCR</button><span id="ocrStatus" class="muted" role="status" aria-live="polite"></span></div>
+        <p class="muted" data-i18n="Text recognition runs in your browser; screenshots are not uploaded. Check suggested names against the image.">Text recognition runs in your browser; screenshots are not uploaded. Check suggested names against the image.</p>
+        <details class="ocr-about"><summary data-i18n="About text recognition">About text recognition</summary><p data-i18n="On first use, your browser loads Tesseract.js and its recognition files, like other website assets. No separate app or installer is needed. Loading these files requires an internet connection.">On first use, your browser loads Tesseract.js and its recognition files, like other website assets. No separate app or installer is needed. Loading these files requires an internet connection.</p></details>
+    </dialog>
+    <dialog id="splitDialog" aria-labelledby="splitTitle"><form id="splitForm"><h2 id="splitTitle" data-i18n="Split screenshots into a new report">Split screenshots into a new report</h2><p data-i18n="Selected screenshots will move to a new report. Enter the account shown in those images and its own reason. Both reports need a fresh review; no ban is sent.">Selected screenshots will move to a new report. Enter the account shown in those images and its own reason. Both reports need a fresh review; no ban is sent.</p><p id="splitCount" class="muted"></p><label for="splitLogin" data-i18n="Exact Twitch login">Exact Twitch login</label><input id="splitLogin" autocomplete="off" spellcheck="false" required maxlength="25" pattern="[A-Za-z0-9_]{1,25}"><label for="splitReason" data-i18n="Reason for this account">Reason for this account</label><textarea id="splitReason" rows="3" maxlength="1000" required></textarea><p id="splitError" class="error" role="alert" hidden></p><div class="actions"><button id="confirmSplit" type="submit" data-i18n="Move screenshots">Move screenshots</button><button id="cancelSplit" type="button" class="quiet" data-i18n="Cancel">Cancel</button></div></form></dialog>
 </body>
 </html>

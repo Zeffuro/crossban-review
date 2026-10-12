@@ -44,14 +44,14 @@ export class Review<S extends ReviewStorage = ReviewStorage> {
         await this.importReports(reports);
     }
 
-    findImportedReport(report: Report, existing = new Map(this.storage.database.reports.map(item => [reportKey(item), item]))): Report | undefined {
+    findImportedReport(report: Report, existing = new Map(this.storage.database.reports.filter(item => !item.splitFrom).map(item => [reportKey(item), item]))): Report | undefined {
         const sourceMatch = report.sourceIdentity && this.storage.database.reports.find(item => item.sourceIdentity === report.sourceIdentity);
         const keyed = existing.get(reportKey(report));
         if (sourceMatch) return sourceMatch;
-        if (keyed && (!report.sourceIdentity || !keyed.sourceIdentity)) return keyed;
+        if (keyed && !keyed.splitFrom && (!report.sourceIdentity || !keyed.sourceIdentity)) return keyed;
         if (!report.sourceIdentity) return undefined;
         const baseMessage = report.raw.split('\n\nFollow-up message:')[0]!;
-        const legacy = this.storage.database.reports.filter(item => !item.sourceIdentity);
+        const legacy = this.storage.database.reports.filter(item => !item.sourceIdentity && !item.splitFrom);
         const rawMatches = legacy.filter(item => item.raw.includes(baseMessage) &&
             item.originalLogin.replace(/`/g, '').toLowerCase() === report.originalLogin.replace(/`/g, '').toLowerCase());
         if (rawMatches.length === 1) return rawMatches[0];
@@ -67,52 +67,106 @@ export class Review<S extends ReviewStorage = ReviewStorage> {
         const observed = new Set(observedSources);
         const active = new Set(reports.map(report => report.sourceIdentity));
         for (const report of this.storage.database.reports) {
-            if (report.sourceIdentity && observed.has(report.sourceIdentity.slice(0, report.sourceIdentity.lastIndexOf('/'))) && !active.has(report.sourceIdentity)) {
+            if (report.sourceIdentity && observed.has(report.sourceIdentity.slice(0, report.sourceIdentity.lastIndexOf('/'))) &&
+                !active.has(report.sourceIdentity) && !report.sourceWithdrawn) {
                 report.sourceWithdrawn = true;
                 report.decision = 'pending';
                 report.lookup = 'unresolved';
                 report.resolved = null;
                 report.warnings = [...new Set([...report.warnings, 'The latest exported message no longer lists this account. This report is blocked; review its source.'])];
+                this.invalidateSplitChildren(report, true);
             }
         }
-        const existing = new Map(this.storage.database.reports.map(report => [reportKey(report), report]));
+        const existing = new Map(this.storage.database.reports.filter(report => !report.splitFrom).map(report => [reportKey(report), report]));
         for (const report of reports) {
             if (report.sourceIdentity) report.sourceRevision = sha256Hex(report.raw);
             const previous = this.findImportedReport(report, existing);
             const sourceMatch = previous?.sourceIdentity === report.sourceIdentity && !!report.sourceIdentity;
             if (!previous) {
+                if (report.sourceIdentity) report.sourceEvidence = [...report.evidence];
                 this.storage.database.reports.push(report);
                 existing.set(reportKey(report), report);
             } else {
-                const newText = !previous.raw.includes(report.raw);
-                const newEvidence = report.evidence.some(url => !previous.evidence.includes(url));
+                const newText = !(sourceMatch && previous.sourceRevision === report.sourceRevision) && !previous.raw.includes(report.raw);
+                const importedEvidence = report.evidence.filter(url => !previous.splitEvidence?.includes(url));
+                const newEvidence = importedEvidence.some(url => !previous.evidence.includes(url));
                 const sourceChanged = !!sourceMatch && previous.sourceRevision !== report.sourceRevision;
-                const fieldsChanged = !!report.sourceIdentity && reportKey(previous) !== reportKey(report);
+                const evidenceChanged = !!sourceMatch && !!previous.sourceEvidence &&
+                    (report.evidence.some(url => !previous.sourceEvidence!.includes(url)) || previous.sourceEvidence.some(url => !report.evidence.includes(url)));
+                // A stable source revision must not undo local identity corrections or review decisions.
+                const fieldsChanged = !!report.sourceIdentity && (!sourceMatch || sourceChanged) && reportKey(previous) !== reportKey(report);
                 if (fieldsChanged) {
-                    if (previous.originalLogin !== report.originalLogin) previous.login = report.login;
+                    const correctedLogin = !!previous.login && previous.login !== previous.originalLogin.toLowerCase();
+                    if (previous.originalLogin !== report.originalLogin && !correctedLogin) previous.login = report.login;
                     previous.originalLogin = report.originalLogin;
                     previous.reason = report.reason;
                     previous.streamer = report.streamer;
                     previous.warnings.push(sourceMatch ? 'The exported report was edited. Check the original message and exact account again.'
                         : 'Export spelling differs from the ambiguous pasted report. Verify every underscore against the screenshot before approving.');
                 }
-                if (newText || sourceChanged || fieldsChanged) {
+                if (newText || sourceChanged || fieldsChanged || evidenceChanged) {
                     if (newText) previous.raw = report.raw.includes(previous.raw) ? report.raw : `${previous.raw}\n\nAdditional import:\n${report.raw}`;
                     previous.decision = 'pending';
                     previous.resolved = null;
                     previous.lookup = 'unresolved';
                     previous.warnings.push('New information was imported. Review this report again, including any corrections.');
                 } else if (newEvidence && previous.decision === 'approved') previous.decision = 'pending';
+                if (sourceChanged || evidenceChanged || newEvidence) this.invalidateSplitChildren(previous, false);
+                else if (previous.sourceWithdrawn) this.invalidateSplitChildren(previous, false);
                 previous.warnings = [...new Set([...previous.warnings, ...report.warnings])];
-                previous.evidence = [...new Set([...previous.evidence, ...report.evidence])];
+                previous.evidence = [...new Set([...previous.evidence, ...importedEvidence])];
                 if (report.sourceIdentity) previous.sourceIdentity = report.sourceIdentity;
                 if (report.sourceRevision) previous.sourceRevision = report.sourceRevision;
                 if (report.sourceIdentity) previous.sourceWithdrawn = false;
+                if (report.sourceIdentity) previous.sourceEvidence = [...report.evidence];
                 if (report.sourceMessageIds) previous.sourceMessageIds = [...new Set([...(previous.sourceMessageIds ?? []), ...report.sourceMessageIds])];
                 if (!previous.sourceUrl && report.sourceUrl) previous.sourceUrl = report.sourceUrl;
             }
         }
         await this.storage.save();
+    }
+
+    private invalidateSplitChildren(parent: Report, withdrawn: boolean): void {
+        for (const child of this.storage.database.reports.filter(item => item.splitFrom === parent.id)) {
+            child.decision = 'pending';
+            child.lookup = 'unresolved';
+            child.resolved = null;
+            child.sourceWithdrawn = withdrawn;
+            child.sourceConflict = true;
+            child.warnings = [...new Set([...child.warnings, withdrawn
+                ? 'The source of this split report was withdrawn. Review its original message before proceeding.'
+                : 'The source of this split report changed. Compare its assigned account and screenshots with the original message again.'])];
+        }
+    }
+
+    async split(id: string, input: Record<string, unknown>): Promise<void> {
+        const parent = this.report(id);
+        const paths = input.evidence;
+        const login = input.login;
+        const reason = input.reason;
+        if (!Array.isArray(paths) || !paths.length || paths.length > 20 || new Set(paths).size !== paths.length ||
+            paths.some(path => typeof path !== 'string' || !/^\/evidence\/[a-f0-9]{32}\.(png|jpg|webp)$/.test(path) || !parent.evidence.includes(path))) {
+            throw new ReviewError('Select distinct screenshots currently attached to this report.');
+        }
+        if (typeof login !== 'string' || !validLogin(login.trim())) throw new ReviewError('Enter an exact Twitch username, preserving every underscore.');
+        if (typeof reason !== 'string' || reason.trim().length > 1000) throw new ReviewError('Use a report reason of at most 1,000 characters.');
+        const source = parent.splitFrom ? this.report(parent.splitFrom) : parent;
+        const before = structuredClone(this.storage.database);
+        this.invalidate();
+        const child: Report = { id: randomUUID(), login: login.trim().toLowerCase(), originalLogin: login.trim(), reason: reason.trim(),
+            streamer: parent.streamer, raw: parent.raw, warnings: ['Screenshots were manually assigned from another report. Review the exact account and its evidence.'],
+            evidence: paths as string[], sourceUrl: parent.sourceUrl, decision: 'pending', resolved: null, lookup: 'unresolved',
+            splitFrom: source.id, splitSourceRevision: source.sourceRevision, sourceMessageIds: [...(parent.sourceMessageIds ?? [])],
+            ...(parent.sourceWithdrawn ? { sourceWithdrawn: true } : {}) };
+        source.splitEvidence = [...new Set([...(source.splitEvidence ?? []), ...child.evidence])];
+        parent.evidence = parent.evidence.filter(path => !child.evidence.includes(path));
+        parent.decision = 'pending';
+        parent.lookup = 'unresolved';
+        parent.resolved = null;
+        parent.warnings = [...new Set([...parent.warnings, 'Screenshots were moved to a separate report. Review the remaining account and evidence again.'])];
+        this.storage.database.reports.push(child);
+        try { await this.storage.save(); }
+        catch (error) { this.storage.database = before; throw error; }
     }
 
     async update(id: string, input: Record<string, unknown>): Promise<void> {
@@ -137,6 +191,7 @@ export class Review<S extends ReviewStorage = ReviewStorage> {
         if (typeof url === 'string') report.sourceUrl = url;
         if (typeof decision === 'string') {
             report.decision = decision as Report['decision'];
+            if (decision !== 'pending' && !report.sourceWithdrawn) report.sourceConflict = false;
         }
         await this.storage.save();
     }

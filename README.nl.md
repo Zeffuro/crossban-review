@@ -86,6 +86,40 @@ zo nodig afhankelijkheden en opent het scherm. Houd het terminalvenster open.
 Ctrl+C stopt de app. Meldingen en screenshots importeren kan ook zonder Twitch.
 Kies **Nederlands** bovenaan; de app onthoudt je taalkeuze op deze computer.
 
+## Screenshots, splitsen en optionele OCR
+
+Klik op een screenshot om de afbeelding binnen de app te bekijken. Gebruik
+**Zoomen** en **Afbeelding passend maken**, sleep om te verplaatsen of gebruik
+de pijltjestoetsen om te scrollen. Met Vorige/Volgende bekijk je het andere bewijs.
+
+Staan verschillende accounts in de screenshots, vink dan **Screenshot verplaatsen**
+aan en kies **Geselecteerde screenshots naar een nieuwe melding…**. Vul het exacte
+account en de eigen reden in. De afbeeldingen worden verplaatst naar een nieuwe,
+nog te beoordelen melding. Beide meldingen moeten opnieuw worden beoordeeld en
+opgezocht. Je kunt alle afbeeldingen verplaatsen; de oorspronkelijke melding
+blijft als bron bewaard. Bij opnieuw importeren blijven de screenshots gescheiden.
+Een echte bronwijziging vereist opnieuw beoordelen; de actiegeschiedenis blijft behouden.
+
+Kies **Tekst lezen (OCR)** in het afbeeldingsvenster voor gratis
+[Tesseract.js](https://github.com/naptha/tesseract.js). Met **Tekstgebied selecteren**
+sleep je eerst een rechthoek rond een naam of chatregel. Herkenningssoftware en
+Engelse taalgegevens worden pas bij gebruik van jsDelivr gedownload; ze zitten
+niet in de repository of ZIP. Het screenshot wordt in je browser verwerkt en
+niet naar een OCR-dienst geüpload. De eerste download vereist internet; je kunt
+de herkenning annuleren. Versies staan vast en het hoofdscript heeft een integriteitscontrole.
+
+Mogelijke chatters, genoemde accounts en andere tekst krijgen afzonderlijke labels.
+**Als concept gebruiken** vult alleen het naamveld in. Vergelijk de naam met de
+afbeelding, corrigeer de spelling, sla de naam op en zoek het exacte account op.
+OCR kan underscores missen, namen splitsen of moderators en genoemde accounts
+meenemen. Het slaat nooit zelf een naam op en keurt, selecteert of bant niemand.
+Je kunt ook **Naam kopiëren** of de uitklapbare **Herkende tekst** gebruiken.
+
+Dagelijks de volledige Discord-export importeren is mogelijk. Een ongewijzigde
+bron behoudt handmatig gecorrigeerde namen en je beoordeling. Echte wijzigingen
+in tekst of screenshots vragen om een nieuwe beoordeling. Bestaande geslaagde en
+onzekere acties blijven in de geschiedenis met de bescherming tegen herhaalde bans.
+
 ## Hebben moderators een token nodig?
 
 **Je hoeft geen token aan te maken of te plakken.** Klik op **Twitch verbinden**,

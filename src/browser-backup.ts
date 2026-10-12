@@ -45,7 +45,7 @@ function sourceUrl(value: unknown): string {
 
 function report(value: unknown): Report {
     const item = object(value, ['id', 'login', 'originalLogin', 'reason', 'streamer', 'raw', 'warnings', 'evidence', 'sourceUrl', 'decision', 'resolved', 'lookup',
-        'sourceIdentity', 'sourceRevision', 'sourceWithdrawn', 'sourceMessageIds']);
+        'sourceIdentity', 'sourceRevision', 'sourceWithdrawn', 'sourceMessageIds', 'sourceEvidence', 'splitEvidence', 'splitFrom', 'splitSourceRevision', 'sourceConflict']);
     for (const field of ['id', 'login', 'originalLogin', 'reason', 'streamer', 'raw']) string(item[field]);
     if (!/^[a-f0-9-]{1,100}$/.test(string(item.id, 100))) throw invalid();
     strings(item.warnings, 1000);
@@ -58,9 +58,17 @@ function report(value: unknown): Report {
         const resolved = object(item.resolved, ['id', 'login', 'displayName', 'profileImageUrl', 'createdAt']);
         for (const field of ['id', 'login', 'displayName', 'profileImageUrl', 'createdAt']) string(resolved[field], 2000);
     }
-    for (const field of ['sourceIdentity', 'sourceRevision']) if (item[field] !== undefined) string(item[field], 2000);
+    for (const field of ['sourceIdentity', 'sourceRevision', 'splitSourceRevision']) if (item[field] !== undefined) string(item[field], 2000);
     if (item.sourceWithdrawn !== undefined && typeof item.sourceWithdrawn !== 'boolean') throw invalid();
+    if (item.sourceConflict !== undefined && typeof item.sourceConflict !== 'boolean') throw invalid();
+    if (item.splitFrom !== undefined && (!/^[a-f0-9-]{1,100}$/.test(string(item.splitFrom, 100)) || item.sourceIdentity !== undefined)) throw invalid();
     if (item.sourceMessageIds !== undefined) strings(item.sourceMessageIds, 10000);
+    for (const field of ['sourceEvidence', 'splitEvidence']) if (item[field] !== undefined) {
+        for (const path of strings(item[field], 10000, 2000)) {
+            if (field === 'splitEvidence' && !evidencePath.test(path)) throw invalid();
+            if (!evidencePath.test(path)) sourceUrl(path);
+        }
+    }
     return { ...item, warnings: [...new Set(item.warnings as string[])], evidence,
         decision: 'pending', resolved: null, lookup: 'unresolved' } as unknown as Report;
 }
@@ -108,6 +116,12 @@ export async function importBrowserBackup(storage: BrowserStorage, input: unknow
     if (new TextEncoder().encode(JSON.stringify(raw)).length > maxWorkspaceDatabaseBytes) throw invalid();
     const database: Database = { reports: list(raw.reports, 10000).map(report), history: list(raw.history, 100000).map(history) };
     if (new Set(database.reports.map(item => item.id)).size !== database.reports.length || new Set(database.history.map(item => item.id)).size !== database.history.length) throw invalid();
+    for (const item of database.reports) if (item.splitFrom) {
+        const parent = database.reports.find(report => report.id === item.splitFrom);
+        if (!parent || parent.id === item.id || parent.splitFrom) throw invalid();
+        if (item.evidence.some(path => !evidencePath.test(path) ||
+            (parent.sourceEvidence?.includes(path) && !parent.splitEvidence?.includes(path)))) throw invalid();
+    }
     if (raw.importSummary !== undefined) {
         const summary = object(raw.importSummary, ['files', 'messages', 'reports', 'attachments', 'loaded', 'failed', 'unassigned', 'ignoredMessages', 'issues']);
         for (const field of ['files', 'messages', 'reports', 'attachments', 'loaded', 'failed', 'unassigned', 'ignoredMessages']) {
@@ -138,7 +152,8 @@ export async function importBrowserBackup(storage: BrowserStorage, input: unknow
         if (!type || asset.mime !== mimeTypes[type] || !path.endsWith(`.${type}`) || bytes.length > maxImage || (total += bytes.length) > maxAssets) throw invalid();
         assets.set(path, new Blob([bytes as Uint8Array<ArrayBuffer>], { type: mimeTypes[type] }));
     }
-    for (const path of [...database.reports.flatMap(item => item.evidence), ...Object.values(database.exportAssets ?? {})]) {
+    for (const path of [...database.reports.flatMap(item => [...item.evidence, ...(item.sourceEvidence ?? []), ...(item.splitEvidence ?? [])]),
+        ...Object.values(database.exportAssets ?? {})]) {
         if (evidencePath.test(path) && !assets.has(path)) throw invalid();
     }
     const currentIds = new Set(storage.database.history.map(entry => entry.id));

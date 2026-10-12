@@ -41,7 +41,7 @@ describe('English and Dutch interface catalog', () => {
         const known = new Set(runInContext('Object.keys(dutchMessages)', context) as string[]);
         const html = await publicFile('index.html');
         const keys = [...html.matchAll(/data-i18n(?:-html|-placeholder|-aria-label|-title)?="([^"]+)"/g)].map(match => decode(match[1]!));
-        for (const name of ['app.js', 'device-login.js']) {
+        for (const name of ['app.js', 'device-login.js', 'evidence-ui.js']) {
             const source = await publicFile(name);
             keys.push(...[...source.matchAll(/\bt\('((?:\\.|[^'\\])*)'/g)].map(match => match[1]!.replace(/\\'/g, "'").replace(/\\\\/g, '\\')));
         }

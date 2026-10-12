@@ -77,7 +77,7 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; worker-src blob:; style-src 'self'; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self' https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
     if (![ `localhost:${port}`, `127.0.0.1:${port}` ].includes(req.headers.host ?? '')) throw new ReviewError('Invalid local host.', 403);
     if (req.headers.origin && ![origin, `http://127.0.0.1:${port}`].includes(req.headers.origin)) throw new ReviewError('Only the local review screen may call this tool.', 403);
     const url = new URL(req.url ?? '/', origin);
@@ -113,7 +113,10 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
             '/i18n.js': ['public/i18n.js', 'text/javascript; charset=utf-8'],
             '/device-login.js': ['public/device-login.js', 'text/javascript; charset=utf-8'],
             '/browser-ui.js': ['public/browser-ui.js', 'text/javascript; charset=utf-8'],
+            '/evidence-ui.js': ['public/evidence-ui.js', 'text/javascript; charset=utf-8'],
+            '/ocr.js': ['public/ocr.js', 'text/javascript; charset=utf-8'],
             '/styles.css': ['public/styles.css', 'text/css; charset=utf-8'],
+            '/evidence.css': ['public/evidence.css', 'text/css; charset=utf-8'],
             '/README.md': ['README.md', 'text/plain; charset=utf-8'],
         };
         const staticFile = staticFiles[url.pathname];
@@ -178,10 +181,11 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
         else if (url.pathname === '/api/unban' && req.method === 'POST') await review.unban(stringField(input, 'historyId'), stringField(input, 'confirmation'));
         else if (url.pathname === '/api/reconcile' && req.method === 'POST') await review.reconcile(stringField(input, 'historyId'), stringField(input, 'outcome'), input.reviewed === true);
         else {
-            const match = /^\/api\/reports\/([a-f0-9-]+)(\/evidence)?$/.exec(url.pathname);
+            const match = /^\/api\/reports\/([a-f0-9-]+)(\/evidence|\/split)?$/.exec(url.pathname);
             if (!match) throw new ReviewError('Not found.', 404);
             const report = review.report(match[1]!);
-            if (match[2] && req.method === 'POST') {
+            if (match[2] === '/split' && req.method === 'POST') await review.split(report.id, input);
+            else if (match[2] === '/evidence' && req.method === 'POST') {
                 const dataUrl = stringField(input, 'dataUrl');
                 const image = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
                 if (!image) throw new ReviewError('Use a PNG, JPEG or WebP screenshot.');

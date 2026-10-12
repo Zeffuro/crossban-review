@@ -212,6 +212,7 @@ function renderDetail() {
     login.value = report.login;
     login.autocomplete = 'off';
     login.spellcheck = false;
+    login.id = 'reportLogin';
     login.setAttribute('aria-label', t('Exact Twitch login'));
     loginRow.append(login, mutationButton(t('Save login'), () => patch({ login: login.value.trim() })));
     $('detail').append(detailField(t('Exact Twitch login'), loginRow));
@@ -243,23 +244,7 @@ function renderDetail() {
     source.setAttribute('aria-label', t('Original source message URL'));
     sourceRow.append(source, mutationButton(t('Save URL'), () => patch({ sourceUrl: source.value.trim() })));
     $('detail').append(detailField(t('Source message URL'), sourceRow));
-    const evidence = element('div', 'evidence');
-    for (const [index, path] of report.evidence.entries()) {
-        if (typeof path !== 'string' || !/^\/evidence\/[a-f0-9]{32}\.(png|jpg|webp)$/.test(path)) continue;
-        const link = element('a');
-        const evidenceUrl = state.environment === 'browser' ? state.evidenceUrls?.[path] : path;
-        if (!evidenceUrl) continue;
-        link.href = evidenceUrl;
-        link.target = '_blank';
-        link.rel = 'noopener';
-        const image = element('img');
-        image.src = evidenceUrl;
-        image.alt = t('Attached evidence {index} for {login}', { index: index + 1, login: report.login });
-        image.loading = 'lazy';
-        link.append(image);
-        evidence.append(link);
-    }
-    $('detail').append(detailField(t('Screenshot evidence'), evidence));
+    $('detail').append(detailField(t('Screenshot evidence'), renderEvidence(report)));
     const upload = element('div', 'upload');
     const file = element('input');
     file.type = 'file';
@@ -526,7 +511,7 @@ document.addEventListener('ui-language-change', () => {
 
 document.addEventListener('paste', (event) => {
     const files = [...(event.clipboardData?.items || [])].filter((item) => item.kind === 'file' && item.type.startsWith('image/')).map((item) => item.getAsFile()).filter(Boolean);
-    if (!files.length || !activeId || $('confirmDialog').open) return;
+    if (!files.length || !activeId || $('confirmDialog').open || $('evidenceDialog').open || $('splitDialog').open) return;
     event.preventDefault();
     uploadFiles(files, activeId);
 });

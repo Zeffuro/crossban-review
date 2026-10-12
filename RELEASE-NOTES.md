@@ -1,8 +1,10 @@
-Crossban Review v0.1.1 fixes Windows startup and makes Twitch login easier.
+Crossban Review v0.2.0 improves screenshot review and daily imports.
 
-- The Windows launcher uses the registered default browser handler to open the app.
-- Manually opening localhost also applies the launcher's selected language. Changing the language in the app now survives refreshing.
-- Twitch login opens a popup that closes after authorization and attempts to bring the review screen back into focus. Blocked popups retain the ordinary tab link, with clearer return instructions in English and Dutch.
+- Reimporting an unchanged Discord channel preserves manually corrected usernames and skipped/approved decisions, including screenshot-only reports. Existing ban history stays intact.
+- Select screenshots and move them into a separate report with its own exact account and reason. Later imports remember the split. Source changes require review again.
+- Click images to zoom, pan and compare them inside the app.
+- Optional free OCR runs in your browser, with sender/mention hints, copying and draft usernames. The engine downloads only when used; no heavy OCR binaries are bundled. Suggestions require manual verification and never trigger moderation actions.
+- English and Dutch controls and instructions.
 
 To update a Windows copy, stop it with Ctrl+C, extract the new ZIP over the existing app files and run Start.cmd again. Keep your existing `data/` folder and `.env` file.
 

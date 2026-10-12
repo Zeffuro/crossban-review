@@ -24,6 +24,8 @@ jobs:
       - run: node --check public/i18n.js
       - run: node --check public/device-login.js
       - run: node --check public/browser-ui.js
+      - run: node --check public/evidence-ui.js
+      - run: node --check public/ocr.js
       - run: pnpm build:pages
   pages-build:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
